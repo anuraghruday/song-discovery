@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gambia by Sona Jobarteh | A Visual Experience</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400;1,600&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        :root {
+            --bg-calabash: #F6F1EA;
+            --text-earth: #2E2015;
+            --accent-terracotta: #B45B35;
+            --accent-gold: #D6893B;
+            --river-blue: #4A7A8C;
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-calabash);
+            color: var(--text-earth);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            overflow-x: hidden;
+            font-size: 18px;
+        }
+
+        /* 21 Strings Motif */
+        .kora-strings {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            display: flex;
+            justify-content: space-evenly;
+            pointer-events: none;
+        }
+
+        .kora-string {
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(180,91,53,0), rgba(180,91,53,0.08), rgba(180,91,53,0));
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 120%; /* Extra height for parallax */
+            background: url('https://commons.wikimedia.org/wiki/Special:FilePath/Gambia_%26_Senegal_2009_(3687307740).jpg') center/cover no-repeat;
+            z-index: 1;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(46,32,21,0.4), rgba(46,32,21,0.8));
+            z-index: 2;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            color: #fff;
+            padding: 2rem;
+        }
+
+        .hero-label {
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            color: var(--accent-gold);
+        }
+
+        .hero-title {
+            font-family: var(--font-serif);
+            font-size: clamp(4rem, 10vw, 8rem);
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-style: italic;
+            font-family: var(--font-serif);
+            color: #eaeaea;
+        }
+
+        .marquee-container {
+            position: absolute;
+            bottom: 2rem;
+            width: 100%;
+            overflow: hidden;
+            z-index: 3;
+            white-space: nowrap;
+        }
+
+        .marquee-text {
+            display: inline-block;
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.7);
+            animation: marquee 20s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        /* Typography */
+        h2 {
+            font-family: var(--font-serif);
+            font-size: 2.5rem;
+            color: var(--accent-terracotta);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 2rem;
+            color: #4a3a2e;
+            font-size: 1.15rem;
+        }
+
+        p.lead {
+            font-size: 1.5rem;
+            font-family: var(--font-serif);
+            line-height: 1.5;
+            color: var(--text-earth);
+            margin-bottom: 3rem;
+            text-align: center;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .drop-cap::first-letter {
+            font-family: var(--font-serif);
+            font-size: 4rem;
+            float: left;
+            line-height: 0.8;
+            padding-right: 0.5rem;
+            color: var(--accent-terracotta);
+            font-weight: 800;
+        }
+
+        /* Video Section */
+        .video-wrapper {
+            max-width: 1000px;
+            margin: 4rem auto;
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            border-radius: 120px 20px 120px 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+
+        /* Split Sections */
+        .split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin: 6rem 0;
+        }
+
+        .split.reverse {
+            direction: rtl;
+        }
+
+        .split.reverse > * {
+            direction: ltr;
+        }
+
+        .calabash-img {
+            width: 100%;
+            height: auto;
+            border-radius: 120px 20px 120px 20px;
+            object-fit: cover;
+            box-shadow: 0 20px 40px rgba(46, 32, 21, 0.15);
+            transition: transform 0.5s ease;
+        }
+
+        .calabash-img:hover {
+            transform: scale(1.02);
+        }
+
+        /* Info Grid */
+        .fact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+
+        .fact-card {
+            background: #fff;
+            padding: 2.5rem;
+            border-radius: 20px 80px 20px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--accent-gold);
+            transition: transform 0.3s ease;
+        }
+
+        .fact-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .fact-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--river-blue);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .fact-value {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            color: var(--text-earth);
+            font-weight: 600;
+        }
+
+        /* Map Section */
+        .map-section {
+            margin: 6rem 0;
+            position: relative;
+        }
+        
+        #gambia-map {
+            height: 450px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+
+        .map-caption {
+            background: var(--bg-calabash);
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            position: absolute;
+            bottom: -2rem;
+            right: 2rem;
+            max-width: 350px;
+            z-index: 10;
+        }
+
+        /* Spotify Section */
+        .spotify-wrapper {
+            margin: 4rem auto;
+            max-width: 800px;
+        }
+
+        /* Rabbit Hole */
+        .rabbit-hole {
+            margin: 8rem 0;
+            padding-top: 4rem;
+            border-top: 1px solid rgba(180,91,53,0.2);
+        }
+
+        .rh-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .rh-card {
+            background: var(--text-earth);
+            color: var(--bg-calabash);
+            padding: 2.5rem;
+            border-radius: 12px;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rh-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, var(--accent-terracotta), var(--accent-gold));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 1;
+        }
+
+        .rh-card:hover::before {
+            opacity: 1;
+        }
+
+        .rh-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .rh-song {
+            font-family: var(--font-serif);
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .rh-artist {
+            color: var(--accent-gold);
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .rh-card:hover .rh-artist {
+            color: #fff;
+        }
+
+        .rh-why {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 0;
+        }
+
+        .citation {
+            font-size: 0.6em;
+            opacity: 0.4;
+            vertical-align: super;
+            margin-left: 2px;
+            font-family: var(--font-sans);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .split { grid-template-columns: 1fr; gap: 2rem; }
+            .split.reverse > * { direction: ltr; }
+            .split.reverse { direction: ltr; }
+            .calabash-img { border-radius: 60px 10px 60px 10px; }
+            .video-wrapper { border-radius: 40px 10px 40px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Procedural 21 Strings Background -->
+    <div class="kora-strings" id="strings-container"></div>
+
+    <header class="hero">
+        <div class="hero-bg parallax-hero"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content reveal-hero">
+            <div class="hero-label">Day 4 of 195 · Western Africa</div>
+            <h1 class="hero-title">Gambia</h1>
+            <div class="hero-subtitle">Sona Jobarteh · 2015</div>
+        </div>
+        <div class="marquee-container">
+            <div class="marquee-text">
+                700 YEARS OF TRADITION &nbsp;·&nbsp; THE FIRST FEMALE KORA VIRTUOSO &nbsp;·&nbsp; AN ACOUSTIC ANTHEM &nbsp;·&nbsp; 700 YEARS OF TRADITION &nbsp;·&nbsp; THE FIRST FEMALE KORA VIRTUOSO &nbsp;·&nbsp; AN ACOUSTIC ANTHEM &nbsp;·&nbsp;
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Intro -->
+        <p class="lead reveal">
+            "Gambia" is the quintessential modern anthem of a nation, explicitly written to commemorate the country's 50th independence anniversary in 2015. But to call it merely a patriotic song would be a profound understatement.
+        </p>
+
+        <p class="drop-cap reveal">
+            Sona Jobarteh beautifully captures the resilience, cultural wealth, and unity of her homeland through uplifting, cascading melodies. The track became a massive viral hit globally, transcending the borders of the small West African nation to act as an acoustic ambassador for Gambian heritage. By blending ancient griot traditions with a highly accessible, contemporary production, it bridges generations, continents, and geographies. It stands as a profound celebration of Gambian identity that resonates far beyond the banks of the river that gives the country its name.
+        </p>
+
+        <!-- Video -->
+        <div class="video-wrapper reveal">
+            <iframe src="https://www.youtube.com/embed?listType=search&list=Sona+Jobarteh+Gambia+official+video" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+
+        <!-- Section 1: Breaking the Mold -->
+        <section class="split reveal">
+            <div class="split-text">
+                <h2>Breaking a 700-Year Mold</h2>
+                <p>
+                    Maya Sona Jobarteh’s personal journey is a testament to the power of balancing preservation with radical progression. Born in London in 1983 to a Gambian father and an English mother, she found herself uniquely positioned between worlds<sup class="citation"></sup>. She is the granddaughter of Amadu Bansang Jobarteh, an iconic master griot, and the cousin of the globally celebrated Toumani Diabaté<sup class="citation"></sup>.
+                </p>
+                <p>
+                    From the tender age of four, she was immersed in the complex scales of the kora. However, her formalized education took place in elite Western institutions—the Royal College of Music and the Purcell School of Music—where she studied cello, piano, and classical composition. This bicultural fluency allowed her to dissect, respect, and eventually revolutionize her ancestral music. By deciding to take the kora professionally, with the blessing of her male relatives, she didn't just break a glass ceiling; she dismantled a seven-century-old patriarchal fortress<sup class="citation"></sup>. She proved that the custodianship of history does not belong to a gender, but to the hands that can most eloquently tell the story.
+                </p>
+            </div>
+            <div class="split-image parallax-img">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Sona_Jobarteh_TFF_01.JPG" alt="Sona Jobarteh performing" class="calabash-img">
+            </div>
+        </section>
+
+        <!-- Fact Grid -->
+        <div class="fact-grid reveal">
+            <div class="fact-card">
+                <div class="fact-title">Genre Foundation</div>
+                <div class="fact-value">Acoustic Afro-Pop</div>
+            </div>
+            <div class="fact-card">
+                <div class="fact-title">Primary Instrument</div>
+                <div class="fact-value">21-String Kora</div>
+            </div>
+            <div class="fact-card">
+                <div class="fact-title">Ancestral Lineage</div>
+                <div class="fact-value">Mandinka Griot (Jali)</div>
+            </div>
+            <div class="fact-card">
+                <div class="fact-title">Life's Mission</div>
+                <div class="fact-value">The Gambia Academy</div>
+            </div>
+        </div>
+
+        <!-- Section 2: The Griot & The Kora -->
+        <section class="split reverse reveal">
+            <div class="split-text">
+                <h2>The Crown Jewel of the Griots</h2>
+                <p>
+                    This music is deeply rooted in the Mandinka griot (or jali) tradition, an ancient lineage of oral historians, praise singers, and musicians in West Africa. Griots serve as the keepers of societal history, genealogies, and cultural values, passing them down through song and storytelling for seventy generations. While the music evolves with modern global influences, its core remains a spiritual and social anchor for the Mandé people.
+                </p>
+                <p>
+                    The kora itself is not merely an instrument; it is a repository of souls. Its large calabash gourd resonator, historically harvested from the very earth it sings about, is cut and stretched tight with cow skin. Two handles protrude from the skin, a notched double bridge rises tall, and twenty-one strings stretch into two divided ranks<sup class="citation"></sup>. Playing the kora is akin to weaving water—the cascading polyrhythms produced by both thumbs and index fingers create a shimmering illusion of multiple instruments playing at once. It provides a grounding, earthy bassline simultaneously with a sparkling, melodic treble, wrapping the listener in an intricate sonic architecture.
+                </p>
+            </div>
+            <div class="split-image parallax-img">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Kora_(African_lute_instrument).jpg" alt="Close up of a 21 string Kora" class="calabash-img">
+            </div>
+        </section>
+
+        <!-- Spotify Audio Embed -->
+        <div class="spotify-wrapper reveal">
+            <h2>The Sonic Tapestry</h2>
+            <p>
+                In "Gambia," the instrumentation features a vibrant tapestry of traditional percussion, notably the calabash and djembe, driving a steady, hypnotic groove. Jobarteh's vocals soar effortlessly over the acoustic textures, characterized by a smooth, soulful timbre and traditional melismatic phrasing. Subtle acoustic guitar and bass gently reinforce the traditional rhythms, creating a warm fusion that feels entirely organic. Listen to the track that captured the hearts of millions:
+            </p>
+            <iframe style="border-radius:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);" src="https://open.spotify.com/embed/track/6KqeQs8vlXUzpNNSVBPHNv?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        </div>
+
+        <!-- Section 3: Educational Reform and Map -->
+        <section class="reveal">
+            <h2>Beyond the Strings</h2>
+            <p>
+                To understand Sona Jobarteh is to understand that her musicianship is merely the vehicle for her larger life’s purpose. In The Gambia, as in much of the continent, the legacy of colonial education systems has historically positioned European history and methodology at the center, relegating ancient African traditions, languages, and philosophies to the margins—often labeled merely as 'extra-curricular'. 
+            </p>
+            <p>
+                Jobarteh viewed this structural erasure as a profound crisis of identity for the next generation. Armed with global acclaim and fierce dedication, she founded The Gambia Academy<sup class="citation"></sup>. This groundbreaking institution integrates the rigorous study of the kora, balafon, and djembe directly into mainstream academia alongside mathematics and science. Her students do not just memorize dates; they absorb the continuous cultivation of their heritage, ensuring that their cultural legacy is understood not as a relic of the past, but as a brilliant, vital foundation for the modern world.
+            </p>
+            
+            <div class="map-section">
+                <div id="gambia-map"></div>
+                <div class="map-caption">
+                    <strong>The Gambia River</strong><br>
+                    Flowing through the heart of the country, it serves as both the physical and spiritual anchor of the Mandinka griot tradition.
+                </div>
+            </div>
+        </section>
+
+        <!-- Rabbit Hole Tracks -->
+        <section class="rabbit-hole reveal">
+            <h2>Down the Rabbit Hole</h2>
+            <p>Explore the lineage and evolution of the kora through Sona Jobarteh's musical family tree.</p>
+            
+            <div class="rh-grid">
+                <div class="rh-card">
+                    <div class="rh-content">
+                        <div class="rh-song">Jarabi</div>
+                        <div class="rh-artist">Toumani Diabaté</div>
+                        <p class="rh-why">To explore the whispering gorgeousness and polyrhythmic playing style of Sona's cousin, one of the greatest Kora masters from Mali.</p>
+                    </div>
+                </div>
+                <div class="rh-card">
+                    <div class="rh-content">
+                        <div class="rh-song">Kaira</div>
+                        <div class="rh-artist">Amadu Bansang Jobarteh</div>
+                        <p class="rh-why">To hear the traditional, foundational roots of Sona's grandfather, a legendary Kora master who defined the sound of The Gambia.</p>
+                    </div>
+                </div>
+                <div class="rh-card">
+                    <div class="rh-content">
+                        <div class="rh-song">Bamba Bojang</div>
+                        <div class="rh-artist">Jaliba Kuyateh</div>
+                        <p class="rh-why">To experience the upbeat <em>kumareh</em> style of kora dance music pioneered by the undisputed King of Kora in Gambia.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- GSAP & Lenis for Smooth Scrolling and Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.34/dist/lenis.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // 1. Generate 21 Kora Strings dynamically
+        const stringsContainer = document.getElementById('strings-container');
+        for(let i = 0; i < 21; i++) {
+            const string = document.createElement('div');
+            string.className = 'kora-string';
+            stringsContainer.appendChild(string);
+        }
+
+        // 2. Initialize Smooth Scrolling (Lenis)
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smooth: true
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // 3. GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Hero Parallax
+        gsap.to(".parallax-hero", {
+            yPercent: 15,
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".hero",
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+
+        gsap.to(".reveal-hero", {
+            y: 50,
+            opacity: 0,
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".hero",
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+
+        // Content Reveal Elements
+        gsap.utils.toArray('.reveal').forEach(elem => {
+            gsap.fromTo(elem, 
+                { y: 60, opacity: 0 }, 
+                {
+                    y: 0, 
+                    opacity: 1, 
+                    duration: 1.2, 
+                    ease: "power3.out",
+                    scrollTrigger: {
+                        trigger: elem,
+                        start: "top 85%",
+                    }
+                }
+            );
+        });
+
+        // Image Parallax
+        gsap.utils.toArray('.parallax-img').forEach(img => {
+            gsap.to(img, {
+                y: -30,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: img,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: 1
+                }
+            });
+        });
+
+        // 4. Initialize Interactive Map (Leaflet)
+        const map = L.map('gambia-map', {
+            scrollWheelZoom: false,
+            zoomControl: false
+        }).setView([13.4432, -15.3101], 7);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        // Custom marker setup
+        const customIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div style="background-color:#B45B35; width:16px; height:16px; border-radius:50%; border:3px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+        });
+
+        L.marker([13.4432, -15.3101], {icon: customIcon}).addTo(map)
+            .bindPopup('<b style="font-family:\'Playfair Display\', serif; font-size:1.1rem; color:#B45B35;">The Gambia</b><br><span style="font-family:\'Outfit\', sans-serif;">The acoustic heart of the griot lineage.</span>');
+            
+    </script>
+</body>
+</html>
