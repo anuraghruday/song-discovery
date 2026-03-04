@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nassam Alayna El Hawa - Fairuz | The Soul of Lebanon</title>
+    
+    <!-- Google Fonts: Amiri (Arabic/Serif) & Outfit (Modern Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+
+    <style>
+        :root {
+            /* Color Palette derived from the Lebanese mountains and cedars */
+            --bg-stone: #F2EFE9;
+            --bg-cream: #FCFAF5;
+            --cedar-green: #1B3626;
+            --muted-cedar: #3A5A48;
+            --gold: #C29B4D;
+            --text-dark: #121A15;
+            --border-light: #E0D9CB;
+            --spacing-sm: 1.5rem;
+            --spacing-md: 4rem;
+            --spacing-lg: 8rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-stone);
+            color: var(--text-dark);
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, .amiri {
+            font-family: 'Amiri', serif;
+            font-weight: 700;
+        }
+
+        /* Lenis Smooth Scroll Setup */
+        html.lenis { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
+
+        /* Typography */
+        p {
+            font-size: 1.15rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 5%;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .align-center {
+            align-items: center;
+        }
+
+        /* UI Elements */
+        .gold-line {
+            width: 60px;
+            height: 2px;
+            background-color: var(--gold);
+            margin: 2rem 0;
+        }
+
+        /* ---------------------------------
+           HERO SECTION
+        --------------------------------- */
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: var(--cedar-green);
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: -10%; left: -10%; width: 120%; height: 120%;
+            background-image: url('https://images.unsplash.com/photo-1583483425070-cb9ce8fc51b5?q=80&w=2000');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(27,54,38,0.3) 0%, rgba(27,54,38,0.8) 100%);
+            z-index: 2;
+        }
+
+        .breeze-particles {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) translateX(0) rotate(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 4;
+            text-align: center;
+            color: #fff;
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        .hero-title-arabic {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+            color: var(--gold);
+            opacity: 0.9;
+        }
+
+        .hero-title {
+            font-size: 5rem;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 60px;
+            background-color: rgba(255,255,255,0.3);
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scroll-line::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 50%;
+            background-color: var(--gold);
+            animation: scrollDown 2s infinite cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        @keyframes scrollDown {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(200%); }
+        }
+
+        /* ---------------------------------
+           INFO CARDS GRID
+        --------------------------------- */
+        .facts-section {
+            background-color: var(--bg-cream);
+            padding: 3rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .fact-card {
+            text-align: center;
+            padding: 1.5rem;
+            border-right: 1px solid var(--border-light);
+        }
+
+        .fact-card:last-child {
+            border-right: none;
+        }
+
+        .fact-label {
+            display: block;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+
+        .fact-value {
+            font-family: 'Amiri', serif;
+            font-size: 1.5rem;
+            color: var(--cedar-green);
+        }
+
+        /* ---------------------------------
+           INTRO SECTION
+        --------------------------------- */
+        .intro-section {
+            padding: var(--spacing-lg) 0;
+        }
+
+        .arch-window {
+            border-radius: 200px 200px 0 0;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            height: 600px;
+        }
+
+        .arch-window img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.2) contrast(1.1);
+        }
+
+        .intro-text h2 {
+            font-size: 3.5rem;
+            color: var(--cedar-green);
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ---------------------------------
+           QUOTE BLOCK
+        --------------------------------- */
+        .quote-section {
+            background-color: var(--cedar-green);
+            color: var(--bg-cream);
+            padding: var(--spacing-lg) 0;
+            text-align: center;
+        }
+
+        .quote-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .arabic-quote {
+            font-family: 'Amiri', serif;
+            font-size: 2.5rem;
+            color: var(--gold);
+            margin-bottom: 2rem;
+            direction: rtl;
+            line-height: 1.5;
+        }
+
+        .english-quote {
+            font-size: 1.8rem;
+            font-family: 'Amiri', serif;
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+
+        .quote-author {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #999;
+        }
+
+        /* ---------------------------------
+           HISTORY & CEDARS SECTION
+        --------------------------------- */
+        .history-section {
+            padding: var(--spacing-lg) 0;
+            background-color: var(--bg-cream);
+        }
+
+        .history-image-wrap {
+            position: relative;
+        }
+
+        .history-image-wrap img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 30px 60px rgba(27,54,38,0.15);
+        }
+
+        .image-caption {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            background: var(--gold);
+            color: #fff;
+            padding: 1rem 2rem;
+            font-family: 'Amiri', serif;
+            font-size: 1.2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* ---------------------------------
+           MAP SECTION
+        --------------------------------- */
+        .map-section {
+            padding: var(--spacing-lg) 0;
+            background-color: var(--bg-stone);
+        }
+
+        .map-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 4px solid #fff;
+        }
+
+        #lebanon-map {
+            width: 100%;
+            height: 100%;
+            filter: sepia(0.3) hue-rotate(-10deg) saturate(0.8);
+            z-index: 1;
+        }
+
+        /* ---------------------------------
+           MUSICAL ANATOMY (STICKY SCROLL)
+        --------------------------------- */
+        .anatomy-section {
+            padding: var(--spacing-lg) 0;
+            background-color: var(--cedar-green);
+            color: var(--bg-cream);
+        }
+
+        .anatomy-layout {
+            display: flex;
+            gap: 5rem;
+            align-items: flex-start;
+        }
+
+        .anatomy-left {
+            flex: 1;
+            position: sticky;
+            top: 25vh;
+        }
+
+        .anatomy-left h2 {
+            font-size: 3.5rem;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .anatomy-left p {
+            color: #d1d8d4;
+        }
+
+        .anatomy-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        .anatomy-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(194,155,77,0.3);
+            border-radius: 16px;
+            padding: 3rem;
+            backdrop-filter: blur(10px);
+            transition: transform 0.4s ease, border-color 0.4s ease;
+        }
+
+        .anatomy-card:hover {
+            transform: translateX(-10px);
+            border-color: var(--gold);
+        }
+
+        .anatomy-card h3 {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .anatomy-card h3::before {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 2px;
+            background: var(--gold);
+        }
+
+        .anatomy-card p {
+            color: #fff;
+            margin-bottom: 0;
+        }
+
+        /* ---------------------------------
+           MULTIMEDIA SECTION
+        --------------------------------- */
+        .media-section {
+            padding: var(--spacing-lg) 0;
+            background-color: var(--bg-cream);
+        }
+
+        .media-section h2 {
+            text-align: center;
+            font-size: 3rem;
+            color: var(--cedar-green);
+            margin-bottom: 3rem;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        .spotify-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .spotify-wrapper iframe {
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        /* ---------------------------------
+           RABBIT HOLE (CARDS)
+        --------------------------------- */
+        .rabbit-hole {
+            padding: var(--spacing-lg) 0;
+            background-color: var(--bg-stone);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .rabbit-hole h2 {
+            text-align: center;
+            font-size: 3rem;
+            color: var(--cedar-green);
+            margin-bottom: 1rem;
+        }
+
+        .rabbit-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 4rem;
+        }
+
+        .rabbit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .rabbit-card {
+            background: #fff;
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .rabbit-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: var(--gold);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .rabbit-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .rabbit-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .rabbit-card h4 {
+            font-size: 1.8rem;
+            color: var(--cedar-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .rabbit-artist {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        /* ---------------------------------
+           RESPONSIVE DESIGN
+        --------------------------------- */
+        @media (max-width: 1024px) {
+            .grid-2, .anatomy-layout {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+                flex-direction: column;
+            }
+            .anatomy-left {
+                position: relative;
+                top: 0;
+            }
+            .arch-window {
+                height: 400px;
+                order: -1;
+            }
+            .hero-title {
+                font-size: 3.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+            .facts-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .fact-card {
+                border-right: none;
+                border-bottom: 1px solid var(--border-light);
+            }
+            .quote-container .english-quote {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="lenis-wrapper">
+        
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-bg gsap-parallax" data-speed="0.5"></div>
+            <div class="hero-overlay"></div>
+            <div class="breeze-particles" id="particles"></div>
+            
+            <div class="hero-content gsap-fade-up">
+                <div class="hero-title-arabic">نسم علينا الهوى</div>
+                <h1 class="hero-title">Nassam Alayna El Hawa</h1>
+                <p class="hero-subtitle">Fairuz • 1967</p>
+            </div>
+
+            <div class="scroll-indicator gsap-fade-in" style="transition-delay: 1s;">
+                <span>Breathe the air</span>
+                <div class="scroll-line"></div>
+            </div>
+        </section>
+
+        <!-- INFO CARDS -->
+        <section class="facts-section">
+            <div class="facts-grid container">
+                <div class="fact-card gsap-reveal">
+                    <span class="fact-label">Artist</span>
+                    <span class="fact-value">Fairuz</span>
+                </div>
+                <div class="fact-card gsap-reveal" style="transition-delay: 0.1s;">
+                    <span class="fact-label">Released</span>
+                    <span class="fact-value">1967</span>
+                </div>
+                <div class="fact-card gsap-reveal" style="transition-delay: 0.2s;">
+                    <span class="fact-label">Genre</span>
+                    <span class="fact-value">Folk Pop / Tarab</span>
+                </div>
+                <div class="fact-card gsap-reveal" style="transition-delay: 0.3s;">
+                    <span class="fact-label">Origin</span>
+                    <span class="fact-value">Lebanon</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- INTRO: THE ANTHEM -->
+        <section class="intro-section container grid-2 align-center">
+            <div class="intro-text gsap-reveal">
+                <h2>The Unofficial Anthem</h2>
+                <div class="gold-line"></div>
+                <p><strong>"Nassam Alayna El Hawa"</strong> (The Breeze Blew Upon Us) is widely considered the unofficial national anthem of Lebanon. Written and composed by the legendary Rahbani Brothers, the song captures a profound sense of longing for the homeland and its crisp mountain air.</p>
+                <p>With Lebanon's extensive history of emigration and a massive global diaspora, the track serves as a unifying anchor of national identity. Its emotional resonance is so absolute that it effortlessly bridges generational, political, and sectarian divides. Whenever it plays, it evokes a collective nostalgia that defines the very soul of the Lebanese people.</p>
+            </div>
+            <div class="intro-visual arch-window gsap-reveal">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Fairuz.jpg" alt="Fairuz, The Jewel of Lebanon" loading="lazy">
+            </div>
+        </section>
+
+        <!-- GHOURBA QUOTE -->
+        <section class="quote-section">
+            <div class="quote-container gsap-reveal">
+                <p class="arabic-quote">فزعانة يا قلبي أكبر بهالغربة ما تعرفني بلادي</p>
+                <p class="english-quote">"I am afraid, oh my heart, to grow up in this estrangement, and my home wouldn't recognize me."</p>
+                <p class="quote-author">— Nassam Alayna El Hawa</p>
+            </div>
+        </section>
+
+        <!-- THE JEWEL & THE RAHBANIS -->
+        <section class="history-section container grid-2 align-center">
+            <div class="history-image-wrap gsap-reveal">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/0/07/Cedars_of_God.jpg" alt="Cedars of God in Lebanon" loading="lazy">
+                <div class="image-caption">The Cedars of God</div>
+            </div>
+            <div class="intro-text gsap-reveal">
+                <h2>The Jewel of Lebanon</h2>
+                <div class="gold-line"></div>
+                <p>Fairuz, born Nouhad Haddad in 1934, is one of the most revered musical icons in the Arab world. Teaming up with the visionary Rahbani Brothers, she revolutionized Arabic music by blending Levantine folk traditions with Western classical orchestration.</p>
+                <p>Her angelic, remarkably composed vocal delivery stood in stark contrast to the lengthy, theatrical melodrama of earlier Egyptian icons. Throughout the devastating Lebanese Civil War (1975–1990), she famously refused to perform in Lebanon to avoid the appearance of taking sides. This steadfast neutrality firmly cemented her status as a symbol of national unity.</p>
+                <p>Today, her voice remains a cultural staple, reliably broadcast every single morning on radio stations from Beirut to Baghdad, accompanied by the daily ritual of Arabic coffee.</p>
+            </div>
+        </section>
+
+        <!-- GEOGRAPHY MAP -->
+        <section class="map-section">
+            <div class="container grid-2 align-center">
+                <div class="map-text gsap-reveal">
+                    <h2>The Towering Landscape</h2>
+                    <div class="gold-line"></div>
+                    <p>"Nassam Alayna El Hawa" specifically touches upon the cultural concept of <em>Ghourba</em> (exile or alienation), a recurring theme deeply felt by millions in the diaspora.</p>
+                    <p>Lebanon's geography is defined by its dramatic elevation changes. Within a short drive, one can travel from the Mediterranean shores up to the snow-capped peaks of Mount Makmel. The Lebanon Mountain range runs parallel to the coast, serving as a historic refuge. The air here—the <em>hawa</em>—is crisp, carrying the scent of ancient cedar and juniper. It is this very breeze that Fairuz calls upon in the song to "take me home."</p>
+                </div>
+                <div class="map-container gsap-reveal">
+                    <div id="lebanon-map"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MUSICAL ANATOMY -->
+        <section class="anatomy-section">
+            <div class="container anatomy-layout">
+                <div class="anatomy-left gsap-reveal">
+                    <h2>Anatomy of the Sound</h2>
+                    <p>In the mid-20th century, the Rahbani Brothers pioneered a distinct Lebanese musical identity. They elevated rural folk traditions, such as the regional Dabke line dance, into sophisticated pop productions utilizing a rich blend of Eastern and Western instruments.</p>
+                </div>
+                <div class="anatomy-right">
+                    <div class="anatomy-card gsap-reveal">
+                        <h3>The Fretless Oud</h3>
+                        <p>The quintessential acoustic lute of Middle Eastern music. In Rahbani arrangements, the oud provides a rich, woody rhythmic foundation, grounding the soaring orchestral strings with an unmistakable earthy, traditional resonance.</p>
+                    </div>
+                    <div class="anatomy-card gsap-reveal">
+                        <h3>The Cascading Qanun</h3>
+                        <p>A flat trapezoidal zither with over 70 strings. Played with tortoiseshell picks, the qanun delivers rapid, glittering melodic runs that mimic the flowing mountain springs of the Qadisha Valley, adding a shimmering texture to the track.</p>
+                    </div>
+                    <div class="anatomy-card gsap-reveal">
+                        <h3>The Breath of the Nay</h3>
+                        <p>This ancient end-blown reed flute possesses a breathy, human-like voice. In "Nassam Alayna El Hawa", the nay directly embodies the wind—the breeze itself—weaving mournful, airy melodies that pull at the heartstrings of the diaspora.</p>
+                    </div>
+                    <div class="anatomy-card gsap-reveal">
+                        <h3>Cinematic Strings</h3>
+                        <p>The Rahbanis broke away from the traditional small ensemble by introducing grand, sweeping Western string sections. This cross-cultural orchestration elevated village folk tunes into majestic, cinematic anthems worthy of the global stage.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MULTIMEDIA EXPERIENCE -->
+        <section class="media-section container">
+            <h2 class="gsap-reveal">Safar Barlik & The Sound</h2>
+            <div class="grid-2">
+                <div class="media-text gsap-reveal">
+                    <p>The song was originally performed by Fairuz in the 1967 Lebanese film <em>Safar Barlik</em> (The Exile). In one of the most iconic moments in Arab cinema, Fairuz sings the track on a moving train.</p>
+                    <p>The visual of the train perfectly encapsulates the longing of a journey. The rhythmic chugging of the locomotive merges seamlessly with the lively Levantine dance beat, creating a masterpiece of audiovisual storytelling that perfectly visualizes the longing to return home.</p>
+                    <div class="video-wrapper" style="margin-top: 2rem;">
+                        <iframe src="https://www.youtube.com/embed/TUbQcxsJwWQ?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="spotify-wrapper gsap-reveal">
+                    <iframe src="https://open.spotify.com/embed/artist/4njCwHNqg2L8qB7r6zR0mX" width="100%" height="450" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- RABBIT HOLE -->
+        <section class="rabbit-hole">
+            <div class="container">
+                <h2 class="gsap-reveal">Venture Deeper</h2>
+                <p class="rabbit-subtitle gsap-reveal">Explore the golden era of Arab pop and Fairuz's evolution.</p>
+                
+                <div class="rabbit-grid">
+                    <div class="rabbit-card gsap-reveal">
+                        <h4>Li Beirut</h4>
+                        <span class="rabbit-artist">Fairuz</span>
+                        <p>A heartbreaking, melancholic ode to the city of Beirut, set beautifully to the melody of the second movement of Joaquín Rodrigo's <em>Concierto de Aranjuez</em>. It stands as a timeless lament for a resilient city.</p>
+                    </div>
+                    
+                    <div class="rabbit-card gsap-reveal" style="transition-delay: 0.1s;">
+                        <h4>Kifak Inta</h4>
+                        <span class="rabbit-artist">Fairuz</span>
+                        <p>Written by her son Ziad Rahbani, this jazz-infused, conversational track showcases the modern, experimental evolution of her later career, proving her unparalleled versatility.</p>
+                    </div>
+                    
+                    <div class="rabbit-card gsap-reveal" style="transition-delay: 0.2s;">
+                        <h4>Zay El Hawa</h4>
+                        <span class="rabbit-artist">Abdel Halim Hafez</span>
+                        <p>If you love the sweeping orchestration of Arab pop, this Egyptian classic offers a grand, theatrical contrast to Fairuz's stoic mountain folk, exemplifying the deeply emotional Egyptian <em>Tarab</em> style.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Scripts -->
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+
+    <script>
+        // 1. Initialize Lenis Smooth Scroll
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+            mouseMultiplier: 1,
+            smoothTouch: false,
+            touchMultiplier: 2,
+            infinite: false,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // Connect Lenis to GSAP ScrollTrigger
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time)=>{
+            lenis.raf(time * 1000);
+        });
+        gsap.ticker.lagSmoothing(0, 0);
+
+        // 2. Leaflet Map Initialization
+        const map = L.map('lebanon-map', {
+            scrollWheelZoom: false,
+            zoomControl: false,
+            dragging: !L.Browser.mobile
+        }).setView([34.1, 35.8], 8);
+
+        // Esri World Topo Map for beautiful mountainous terrain view
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri'
+        }).addTo(map);
+
+        // Custom Markers
+        const cedarsIcon = L.divIcon({
+            html: `<div style="background:var(--cedar-green); color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:12px; white-space:nowrap; border:2px solid var(--gold);">🌲 Cedars of God</div>`,
+            className: 'custom-map-label'
+        });
+        L.marker([34.24500, 36.04806], {icon: cedarsIcon}).addTo(map);
+
+        const beirutIcon = L.divIcon({
+            html: `<div style="background:#fff; color:var(--text-dark); padding:4px 8px; border-radius:4px; font-weight:bold; font-size:12px; white-space:nowrap; border:2px solid var(--gold);">📻 Beirut</div>`,
+            className: 'custom-map-label'
+        });
+        L.marker([33.8938, 35.5018], {icon: beirutIcon}).addTo(map);
+
+        // 3. Hero Particles Animation
+        const breezeContainer = document.getElementById('particles');
+        for(let i=0; i<40; i++) {
+            let particle = document.createElement('div');
+            particle.classList.add('particle');
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.animationDuration = (Math.random() * 8 + 6) + 's';
+            particle.style.animationDelay = (Math.random() * 5) + 's';
+            let size = Math.random() * 3 + 1;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            breezeContainer.appendChild(particle);
+        }
+
+        // 4. GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Initial Load Animations
+        gsap.fromTo('.hero-fade-up', 
+            { y: 50, opacity: 0 }, 
+            { y: 0, opacity: 1, duration: 1.5, ease: 'power3.out' }
+        );
+
+        // Parallax Background
+        gsap.to('.hero-bg', {
+            yPercent: 30,
+            ease: 'none',
+            scrollTrigger: {
+                trigger: '.hero',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: true
+            }
+        });
+
+        // Reveal Elements on Scroll
+        gsap.utils.toArray('.gsap-reveal').forEach(elem => {
+            gsap.fromTo(elem, 
+                { y: 50, opacity: 0 }, 
+                { 
+                    y: 0, 
+                    opacity: 1, 
+                    duration: 1, 
+                    ease: 'power3.out',
+                    scrollTrigger: {
+                        trigger: elem,
+                        start: 'top 85%',
+                        toggleActions: 'play none none reverse'
+                    }
+                }
+            );
+        });
+    </script>
+</body>
+</html>
