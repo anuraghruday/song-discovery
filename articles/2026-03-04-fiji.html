@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAUDE | Black Rose & The Fijian Vude Movement</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        :root {
+            --bg-deep: #020a12;
+            --bg-card: #061524;
+            --text-main: #c4d6e8;
+            --text-heading: #ffffff;
+            --accent-cyan: #00e5ff;
+            --accent-wood: #d9772b;
+            --glass-bg: rgba(6, 21, 36, 0.6);
+            --glass-border: rgba(0, 229, 255, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+
+        h1, h2, h3, h4, h5, .display-font {
+            font-family: 'Anton', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--text-heading);
+            font-weight: 400;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero-img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://images.unsplash.com/photo-1559825481-12a05cc00344?q=80&w=2000&auto=format&fit=crop') no-repeat center center/cover;
+            transform: scale(1.1);
+        }
+
+        @keyframes oceanPulse {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero-gradient {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(-45deg, rgba(2, 10, 18, 0.9), rgba(0, 60, 80, 0.7), rgba(2, 10, 18, 0.9));
+            background-size: 400% 400%;
+            animation: oceanPulse 15s ease infinite;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            width: 100%;
+            padding: 0 5%;
+        }
+
+        .hero-title {
+            font-size: clamp(5rem, 15vw, 12rem);
+            line-height: 0.85;
+            margin-bottom: 10px;
+            text-shadow: 0 10px 40px rgba(0, 229, 255, 0.4);
+            background: linear-gradient(180deg, #ffffff 0%, #8ac5d5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 3vw, 1.8rem);
+            color: var(--accent-cyan);
+            letter-spacing: 0.3em;
+            margin-top: 20px;
+            font-weight: 300;
+        }
+
+        /* --- FACTS GRID --- */
+        .facts-container {
+            position: relative;
+            z-index: 20;
+            max-width: 1200px;
+            margin: -60px auto 80px auto;
+            padding: 0 5%;
+        }
+
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .fact-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .fact-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-cyan);
+        }
+
+        .fact-card i {
+            font-size: 2rem;
+            color: var(--accent-wood);
+            margin-bottom: 15px;
+        }
+
+        .fact-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.6;
+            margin-bottom: 5px;
+        }
+
+        .fact-value {
+            font-size: 1.5rem;
+            font-family: 'Anton', sans-serif;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+        }
+
+        /* --- MAIN CONTENT --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 5%;
+        }
+
+        .text-block {
+            margin-bottom: 40px;
+        }
+
+        .text-block p {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Anton', sans-serif;
+            font-size: 5.5rem;
+            line-height: 0.8;
+            padding-right: 15px;
+            padding-top: 10px;
+            color: var(--accent-wood);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            margin: 80px 0;
+        }
+
+        .grid-2.reverse {
+            direction: rtl;
+        }
+        .grid-2.reverse > * {
+            direction: ltr;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2, .grid-2.reverse {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+        }
+
+        /* --- VISUALS & IMAGERY --- */
+        .image-wrapper {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.7s ease;
+        }
+
+        .image-wrapper:hover img {
+            transform: scale(1.04);
+        }
+
+        .image-caption {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 30px 20px 15px 20px;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .section-title {
+            font-size: 3.5rem;
+            margin-bottom: 30px;
+            line-height: 1.1;
+            color: #fff;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -10px;
+            width: 60%;
+            height: 4px;
+            background: var(--accent-wood);
+        }
+
+        /* --- MAP SECTION --- */
+        .map-section {
+            background: var(--bg-card);
+            padding: 80px 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin: 80px 0;
+        }
+
+        #fiji-map {
+            width: 100%;
+            height: 450px;
+            border-radius: 16px;
+            border: 2px solid var(--accent-cyan);
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.1);
+            z-index: 1;
+        }
+
+        .custom-div-icon div {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(0, 229, 255, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 229, 255, 0); }
+        }
+
+        /* --- MULTIMEDIA SECTION --- */
+        .media-container {
+            background: linear-gradient(to bottom, #020a12, #04121f);
+            padding: 100px 5%;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .media-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .embed-wrapper {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            height: 100%;
+        }
+
+        .embed-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            min-height: 350px;
+            border: none;
+        }
+        
+        .spotify-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spotify-container {
+            background: #121212;
+            border-radius: 16px;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .spotify-container iframe {
+            display: block;
+        }
+
+        .media-desc {
+            background: var(--glass-bg);
+            padding: 25px;
+            border-radius: 16px;
+            border-left: 4px solid var(--accent-cyan);
+        }
+        
+        .media-desc h4 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .media-desc p {
+            font-size: 1rem;
+            color: #a0b4c8;
+            line-height: 1.6;
+        }
+
+        /* --- RABBIT HOLE --- */
+        .rabbit-hole {
+            padding: 100px 5%;
+            background: url('https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?q=80&w=2000&auto=format&fit=crop') no-repeat center bottom/cover;
+            position: relative;
+        }
+
+        .rh-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 10, 18, 0.92);
+        }
+
+        .rh-content {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .rh-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .rh-header h2 {
+            font-size: 4rem;
+            color: var(--accent-wood);
+        }
+
+        .rh-header p {
+            font-size: 1.2rem;
+            color: var(--accent-cyan);
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .rh-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .rh-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 40px 30px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rh-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--accent-wood);
+            transition: width 0.4s ease;
+            z-index: 1;
+        }
+
+        .rh-card:hover::before {
+            width: 100%;
+            background: rgba(217, 119, 43, 0.1);
+        }
+
+        .rh-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-wood);
+        }
+
+        .rh-content-inner {
+            position: relative;
+            z-index: 2;
+        }
+
+        .rh-icon {
+            font-size: 2rem;
+            color: var(--accent-cyan);
+            margin-bottom: 20px;
+            transition: transform 0.4s ease;
+        }
+
+        .rh-card:hover .rh-icon {
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        .rh-title-text {
+            font-family: 'Anton', sans-serif;
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .rh-artist {
+            font-family: 'Outfit', sans-serif;
+            color: var(--accent-cyan);
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .rh-desc {
+            color: #a0b4c8;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        /* Blockquote styling */
+        .quote-block {
+            margin: 60px 0;
+            padding: 40px;
+            background: rgba(0, 229, 255, 0.03);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 0 16px 16px 0;
+            position: relative;
+        }
+
+        .quote-block i {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 4rem;
+            color: rgba(0, 229, 255, 0.1);
+            z-index: 0;
+        }
+
+        .quote-block p {
+            position: relative;
+            z-index: 1;
+            font-size: 1.8rem;
+            font-family: 'Anton', sans-serif;
+            color: #fff;
+            line-height: 1.3;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .quote-author {
+            font-size: 1rem;
+            color: var(--accent-wood);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 5%;
+            background: #01050a;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- HERO SECTION -->
+    <header class="hero">
+        <div class="hero-img"></div>
+        <div class="hero-gradient"></div>
+        <div class="hero-content reveal-on-load">
+            <h1 class="hero-title">RAUDE</h1>
+            <p class="hero-subtitle">Fiji's Vude & Meke Fusion Anthem</p>
+        </div>
+    </header>
+
+    <!-- FACTS DATA CARDS -->
+    <div class="facts-container">
+        <div class="facts-grid">
+            <div class="fact-card reveal-up">
+                <i class="fa-solid fa-calendar-days"></i>
+                <div class="fact-label">Released</div>
+                <div class="fact-value">2000</div>
+            </div>
+            <div class="fact-card reveal-up" style="transition-delay: 0.1s;">
+                <i class="fa-solid fa-microphone-lines"></i>
+                <div class="fact-label">Artist</div>
+                <div class="fact-value">Black Rose</div>
+            </div>
+            <div class="fact-card reveal-up" style="transition-delay: 0.2s;">
+                <i class="fa-solid fa-compact-disc"></i>
+                <div class="fact-label">Genre</div>
+                <div class="fact-value">Vude Fusion</div>
+            </div>
+            <div class="fact-card reveal-up" style="transition-delay: 0.3s;">
+                <i class="fa-solid fa-drum"></i>
+                <div class="fact-label">Core Roots</div>
+                <div class="fact-value">Traditional Meke</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN STORY -->
+    <main class="container">
+        
+        <div class="grid-2">
+            <div class="text-block reveal-left">
+                <h2 class="section-title">The Cultural Bridge</h2>
+                <p class="drop-cap">When "Raude" was released at the turn of the millennium, it didn't just climb the charts—it caused a cultural earthquake. It masterfully bridged the gap between traditional indigenous sounds and modern global music, becoming an instant smash hit not just in Fiji, but across the broader South Pacific.</p>
+                <p>Before "Raude," the prevailing notion was that ancient island music and contemporary dance floors were mutually exclusive domains. The track shattered this binary, representing a bold statement of cultural pride. It proved that Fijian roots music could successfully dominate contemporary airwaves without diluting its ancestral power.</p>
+                <p>The song remains the definitive track of the <em>vude</em> movement—a uniquely Fijian genre that mixes island melodies with disco, country, and modern pop elements. Its legacy is one of profound cultural reconnection, inspiring an entire generation of Pacific Islanders to proudly celebrate their heritage under the flashing lights of modern nightlife.</p>
+            </div>
+            <div class="image-wrapper reveal-right">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/63/Fijian_Meke_dancers%2C_Fiji_%289623209599%29.jpg" alt="Traditional Fijian Meke Dancers">
+                <div class="image-caption"><i class="fa-solid fa-camera-retro"></i> Archival image of Fijian Meke Dancers. The visual pulse of the islands.</div>
+            </div>
+        </div>
+
+        <div class="quote-block reveal-up">
+            <i class="fa-solid fa-quote-left"></i>
+            <p>"By infusing this deeply respected, traditional chant with electronic dance beats, Black Rose brought ancient island storytelling into a modern context."</p>
+            <div class="quote-author">— The Evolution of Vude</div>
+        </div>
+
+        <div class="grid-2 reverse">
+            <div class="text-block reveal-right">
+                <h2 class="section-title">The Roots of Meke</h2>
+                <p>To understand the gravity of "Raude," one must understand the <em>meke</em>. This is not merely a dance; it is a traditional Fijian performance art that combines rhythmic chanting, singing, and storytelling. It serves as an oral history book for the islands.</p>
+                <p>Historically, meke is performed during significant community gatherings and ceremonies to transmit legends, spiritual beliefs, and ancestral history. The movements of the dancers, the cadence of the chants, and the rhythm of the drums all carry specific narratives of wars fought, gods worshipped, and voyages taken across the vast Pacific.</p>
+                <p>By sampling and recreating these hypnotic vocal cadences over an upbeat electronic rhythm, Black Rose digitized their ancestors' voices. This musical evolution mirrors broader cultural shifts in Fiji, where globalization fiercely intersects with a determination to preserve indigenous identity. The song ultimately serves as a vibrant cultural bridge, proving that ancient customs can thrive rather than fade in the modern world.</p>
+            </div>
+            <div class="image-wrapper reveal-left">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/ed/Fiji._%22Meke-Meke%22_%28National_Dance%29_%28NBY_441324%29.jpg" alt="Historical photo of a Meke Dance">
+                <div class="image-caption"><i class="fa-solid fa-location-dot"></i> Traditional Meke-Meke performance. The foundation of the rhythm.</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- INTERACTIVE MAP -->
+    <section class="map-section reveal-up">
+        <div class="container" style="padding: 0 5%;">
+            <h2 class="section-title" style="margin-bottom: 20px;">The Geography of Groove</h2>
+            <p style="margin-bottom: 40px; font-size: 1.2rem; max-width: 800px;">The archipelago of Fiji is situated deep in the South Pacific Ocean. The sounds of Vude originated here, blending indigenous Oceanic rhythms with the inescapable global pop frequencies broadcasting into the islands.</p>
+            <div id="fiji-map"></div>
+        </div>
+    </section>
+
+    <main class="container">
+
+        <div class="grid-2">
+            <div class="text-block reveal-left">
+                <h2 class="section-title">The Wood That Breathes</h2>
+                <p>"Raude" opens with organic, hypnotic vocal cadences before exploding into its signature groove. But beneath the synthesizers, the track is anchored by instruments crafted directly from the Fijian earth: the <em>lali</em> and the <em>derua</em>.</p>
+                <p>The lali is a traditional wooden slit drum, carved from resonant timbers like the <em>Vesi</em> tree. Historically used as a form of communication to announce births, deaths, and wars across villages, its deep, carrying tone provides the authoritative heartbeat of the track. </p>
+                <p>Complementing the lali are the derua—bamboo stamping tubes struck against the ground to produce hollow, resonant thuds. Together, they lay down complex, driving polyrhythms that out-groove any drum machine. This striking juxtaposition of acoustic, resonant percussion and glossy synthesizer basslines creates an incredibly infectious, high-energy worldbeat groove.</p>
+            </div>
+            <div class="image-wrapper reveal-right">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/Lali-Suva-Fiji.jpg" alt="Fijian Lali Drum">
+                <div class="image-caption"><i class="fa-solid fa-music"></i> A traditional, well-used Fijian Lali (wooden slit drum).</div>
+            </div>
+        </div>
+
+        <div class="text-block reveal-up" style="max-width: 900px; margin: 80px auto; text-align: center;">
+            <h2 class="section-title" style="text-align: center;">The French Connection</h2>
+            <p style="text-align: justify;">Originally formed in 1992 by relatives Jim Ratusila and Peter Chong, Black Rose (later known by its Fijian translation, <em>Rosiloa</em>) spent years playing local covers. Their band name was actually suggested by the South African reggae group O'Yaba, who reminded them during a 1994 tour that "black people are special."</p>
+            <p style="text-align: justify;">Everything changed when they signed with the New Caledonian label Mangrove Productions to write original music. For their debut original album, "Voices of Nature," they collaborated with producer David Le Roy. If those dance beats sound authentically club-ready, it is because Le Roy famously went on to co-found the 2001 French electronic dance-pop act <strong>Daddy DJ</strong>. This unexpected cross-continental collaboration fused European club sensibilities with Pacific Island roots, creating a track that transcended borders.</p>
+        </div>
+
+    </main>
+
+    <!-- MULTIMEDIA EMBEDS -->
+    <section class="media-container">
+        <div class="media-grid">
+            <div class="embed-wrapper reveal-left">
+                <iframe src="https://www.youtube.com/embed?listType=search&list=Black+Rose+Raude+Fiji+Meke+Music+Video" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+            
+            <div class="spotify-wrapper reveal-right">
+                <div class="media-desc">
+                    <h4>The Sonic Experience</h4>
+                    <p>Press play to hear the immediate collision of traditional meke chanting and modern electronic production. Notice how the wooden lali drum cuts straight through the synthetic bass.</p>
+                </div>
+                <div class="spotify-container">
+                    <!-- Standard Spotify iframe formatting for a track embed -->
+                    <iframe src="https://open.spotify.com/embed/track/30A1tXo15I56N9o4R1tD1f?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RABBIT HOLE -->
+    <section class="rabbit-hole">
+        <div class="rh-overlay"></div>
+        <div class="rh-content">
+            <div class="rh-header reveal-up">
+                <h2>The Rabbit Hole</h2>
+                <p>Continue your journey into the sounds of Fiji</p>
+            </div>
+            
+            <div class="rh-grid">
+                
+                <div class="rh-card reveal-up" style="transition-delay: 0.1s;">
+                    <div class="rh-content-inner">
+                        <i class="fa-solid fa-water rh-icon"></i>
+                        <h4 class="rh-title-text">Isa Lei</h4>
+                        <div class="rh-artist">Sakiusa Bulicokocoko</div>
+                        <p class="rh-desc">Listen to the most famous traditional Fijian farewell song, performed by one of Fiji's most legendary, soulful entertainers. A masterclass in acoustic emotion.</p>
+                    </div>
+                </div>
+
+                <div class="rh-card reveal-up" style="transition-delay: 0.2s;">
+                    <div class="rh-content-inner">
+                        <i class="fa-solid fa-record-vinyl rh-icon"></i>
+                        <h4 class="rh-title-text">A'sia Dina A'rai</h4>
+                        <div class="rh-artist">Laisa Vulakoro</div>
+                        <p class="rh-desc">Dive into the upbeat music of the 'Queen of Vude,' whose infectious fusion of disco, rock, and Fijian folk has made her a towering national icon.</p>
+                    </div>
+                </div>
+
+                <div class="rh-card reveal-up" style="transition-delay: 0.3s;">
+                    <div class="rh-content-inner">
+                        <i class="fa-solid fa-leaf rh-icon"></i>
+                        <h4 class="rh-title-text">Waidebala</h4>
+                        <div class="rh-artist">Black Rose</div>
+                        <p class="rh-desc">Another massive track from the 'Voices of Nature' album that became universally loved across various Pacific Island communities, proving their sound was no fluke.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>Day 6 of 195 — Designed for the Oceania Musical Heritage Series.</p>
+    </footer>
+
+    <!-- GSAP & Leaflet Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Hero Parallax Effect
+        gsap.to(".hero-img", {
+            yPercent: 30,
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".hero",
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+
+        // Load Reveal
+        gsap.from(".reveal-on-load", {
+            y: 50,
+            opacity: 0,
+            duration: 1.5,
+            ease: "power4.out",
+            delay: 0.2
+        });
+
+        // Scroll Reveals (Up)
+        gsap.utils.toArray('.reveal-up').forEach(function(elem) {
+            gsap.from(elem, {
+                scrollTrigger: {
+                    trigger: elem,
+                    start: "top 85%",
+                    toggleActions: "play none none reverse"
+                },
+                y: 60,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out"
+            });
+        });
+
+        // Scroll Reveals (Left)
+        gsap.utils.toArray('.reveal-left').forEach(function(elem) {
+            gsap.from(elem, {
+                scrollTrigger: {
+                    trigger: elem,
+                    start: "top 85%",
+                    toggleActions: "play none none reverse"
+                },
+                x: -60,
+                opacity: 0,
+                duration: 1.2,
+                ease: "power3.out"
+            });
+        });
+
+        // Scroll Reveals (Right)
+        gsap.utils.toArray('.reveal-right').forEach(function(elem) {
+            gsap.from(elem, {
+                scrollTrigger: {
+                    trigger: elem,
+                    start: "top 85%",
+                    toggleActions: "play none none reverse"
+                },
+                x: 60,
+                opacity: 0,
+                duration: 1.2,
+                ease: "power3.out"
+            });
+        });
+
+        // Initialize Leaflet Map
+        document.addEventListener("DOMContentLoaded", function() {
+            // Center map on Fiji
+            var map = L.map('fiji-map', {
+                scrollWheelZoom: false
+            }).setView([-17.7134, 178.0650], 7);
+            
+            // Dark thematic map tiles from CartoDB
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+            
+            // Custom Neon Marker for Suva
+            var customIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: "<div style='background-color:#00e5ff; width:15px; height:15px; border-radius:50%; box-shadow:0 0 15px #00e5ff;'></div>",
+                iconSize: [15, 15],
+                iconAnchor: [7, 7]
+            });
+
+            L.marker([-18.1416, 178.4419], {icon: customIcon}).addTo(map)
+                .bindPopup('<b style="color:#020a12; font-family: Outfit, sans-serif; font-size: 1.1rem;">Suva, Viti Levu</b><br><span style="color:#333; font-family: Outfit, sans-serif;">The capital, and epicenter of the Vude movement.</span>', {
+                    closeButton: false,
+                    className: 'custom-popup'
+                })
+                .openPopup();
+        });
+    </script>
+</body>
+</html>
