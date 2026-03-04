@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entre dos aguas - Paco de Lucía | Interactive Feature</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Montserrat:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        flamenco: '#9b1b1b',
+                        gold: '#d4af37',
+                        sand: '#f4ebd0',
+                        dark: '#0a0806',
+                        darker: '#050403'
+                    },
+                    fontFamily: {
+                        serif: ['"Cinzel"', 'serif'],
+                        sans: ['"Montserrat"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::selection {
+            background-color: #9b1b1b;
+            color: #f4ebd0;
+        }
+        body {
+            background-color: #0a0806;
+            color: #f4ebd0;
+            overflow-x: hidden;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0806;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #9b1b1b;
+        }
+        
+        /* Utility Classes */
+        .glass-panel {
+            background: rgba(10, 8, 6, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+        .hero-bg {
+            background-image: url('https://images.unsplash.com/photo-1629731634584-8509c258d4a4?auto=format&fit=crop&q=80&w=2500');
+            background-size: cover;
+            background-position: center 20%;
+            background-repeat: no-repeat;
+        }
+        .guitar-bg {
+            background-image: url('https://images.unsplash.com/photo-1516057747705-0609711c1b31?auto=format&fit=crop&q=80&w=2500');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .roots-bg {
+            background-image: url('https://images.unsplash.com/photo-1549488344-c6a6d68b693e?auto=format&fit=crop&q=80&w=2500');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .gradient-overlay {
+            background: linear-gradient(to bottom, rgba(10,8,6,0.3) 0%, rgba(10,8,6,0.8) 60%, rgba(10,8,6,1) 100%);
+        }
+        .text-glow {
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+        }
+        .text-glow-red {
+            text-shadow: 0 0 30px rgba(155, 27, 27, 0.6);
+        }
+        
+        /* Map Adjustments */
+        .leaflet-container {
+            font-family: 'Montserrat', sans-serif;
+        }
+        .leaflet-popup-content-wrapper {
+            background: #f4ebd0;
+            color: #0a0806;
+            border-radius: 4px;
+        }
+        .leaflet-popup-tip {
+            background: #f4ebd0;
+        }
+
+        /* Decorative Side Lines */
+        .side-line-left {
+            position: fixed; left: 24px; top: 0; bottom: 0; width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(155,27,27,0.3), transparent);
+            z-index: 50; pointer-events: none;
+        }
+        .side-line-right {
+            position: fixed; right: 24px; top: 0; bottom: 0; width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(155,27,27,0.3), transparent);
+            z-index: 50; pointer-events: none;
+        }
+    </style>
+</head>
+<body class="antialiased font-sans">
+
+    <!-- Decorative Framework -->
+    <div class="side-line-left hidden md:block"></div>
+    <div class="side-line-right hidden md:block"></div>
+
+    <!-- 1. HERO SECTION -->
+    <header class="relative w-full h-screen overflow-hidden hero-section">
+        <div class="absolute inset-0 hero-bg transform scale-105" id="hero-image"></div>
+        <div class="absolute inset-0 gradient-overlay"></div>
+        
+        <div class="relative z-10 h-full flex flex-col justify-center items-center text-center px-6">
+            <p class="font-sans tracking-[0.3em] text-gold uppercase text-xs md:text-sm mb-6 opacity-0 translate-y-4" id="hero-country">
+                Spain • Southern Europe • 1973
+            </p>
+            <h1 class="font-serif text-5xl md:text-8xl lg:text-9xl font-bold text-sand mb-4 leading-none text-glow opacity-0 translate-y-8" id="hero-title">
+                ENTRE <span class="text-flamenco italic">DOS</span> AGUAS
+            </h1>
+            <p class="font-serif text-xl md:text-3xl text-sand italic opacity-0 translate-y-4" id="hero-artist">
+                by Paco de Lucía
+            </p>
+        </div>
+
+        <div class="absolute bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center opacity-0" id="hero-scroll">
+            <span class="font-sans text-[10px] tracking-[0.2em] text-gold uppercase mb-3">Discover the Revolution</span>
+            <div class="w-px h-16 bg-gradient-to-b from-gold to-transparent"></div>
+        </div>
+    </header>
+
+    <!-- 2. THE REVOLUTION (TEXT + STATS) -->
+    <section class="py-24 md:py-32 px-6 max-w-7xl mx-auto relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div class="gsap-fade">
+                <h2 class="font-serif text-4xl md:text-5xl text-gold mb-8 text-glow">The Catalyst of Nuevo Flamenco</h2>
+                <div class="space-y-6 font-light text-lg md:text-xl leading-relaxed text-sand/80">
+                    <p>
+                        Before 1973, flamenco was fiercely guarded—a profound, intimate, and often sacred ritual of passionate singing, virtuosic guitar playing, and percussive dance. It was the purist's domain, deeply rooted in the Andalusian night, largely isolated from global pop trends and electronic instrumentation.
+                    </p>
+                    <p>
+                        Then came a single instrumental track that shattered the boundaries forever. Blending the traditional Spanish acoustic guitar with modern instruments like the electric bass and Afro-Cuban bongos, <span class="text-sand font-medium italic">Entre dos aguas</span> broke flamenco out of its purist niche. 
+                    </p>
+                    <p>
+                        It turned an ancient tradition into a massive, unprecedented popular phenomenon both in Spain and across the globe. By infusing the classical <span class="italic">rumba flamenca</span> with an irresistible, infectious groove, the song became a bridge between the old world and the new.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 gsap-fade">
+                <!-- Data Card -->
+                <div class="glass-panel p-8 flex flex-col justify-center border-t-2 border-t-flamenco transition-all duration-500 hover:-translate-y-2">
+                    <span class="font-serif text-5xl text-gold mb-2">1973</span>
+                    <span class="font-sans text-xs tracking-widest uppercase text-sand/60">Year of Release</span>
+                </div>
+                <!-- Data Card -->
+                <div class="glass-panel p-8 flex flex-col justify-center border-t-2 border-t-flamenco transition-all duration-500 hover:-translate-y-2">
+                    <span class="font-serif text-5xl text-gold mb-2">22</span>
+                    <span class="font-sans text-xs tracking-widest uppercase text-sand/60">Weeks on Spanish Charts</span>
+                </div>
+                <!-- Data Card -->
+                <div class="glass-panel p-8 flex flex-col justify-center sm:col-span-2 border-t-2 border-t-gold transition-all duration-500 hover:-translate-y-2">
+                    <span class="font-serif text-4xl text-sand mb-2">Rumba Flamenca</span>
+                    <span class="font-sans text-xs tracking-widest uppercase text-sand/60">Genre & Rhythm</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. VISUAL BREAK: THE GUITAR -->
+    <section class="relative w-full h-[60vh] guitar-bg flex items-center justify-center">
+        <div class="absolute inset-0 bg-darker/60"></div>
+        <div class="relative z-10 text-center px-6 max-w-4xl mx-auto gsap-fade">
+            <h2 class="font-serif text-3xl md:text-5xl text-sand italic font-light leading-snug">
+                "He didn't just play the guitar. He transformed the wood and strings into a living, breathing extension of the Andalusian soul."
+            </h2>
+        </div>
+    </section>
+
+    <!-- 4. THE MAESTRO -->
+    <section class="py-24 md:py-32 px-6 max-w-6xl mx-auto relative z-10">
+        <div class="flex flex-col md:flex-row gap-12 items-center">
+            <div class="w-full md:w-1/3 flex justify-center gsap-fade">
+                <div class="w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-gold/30 relative">
+                    <img src="https://images.unsplash.com/photo-1516057747705-0609711c1b31?auto=format&fit=crop&q=80&w=800" alt="Spanish Guitar" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700">
+                    <div class="absolute inset-0 bg-flamenco mix-blend-overlay opacity-50"></div>
+                </div>
+            </div>
+            <div class="w-full md:w-2/3 gsap-fade">
+                <h3 class="font-sans tracking-widest text-flamenco text-sm uppercase mb-3">The Maestro</h3>
+                <h2 class="font-serif text-4xl md:text-5xl text-gold mb-6">Paco de Lucía</h2>
+                <div class="space-y-4 font-light text-lg text-sand/80">
+                    <p>
+                        Born Francisco Sánchez Gómez, Paco de Lucía is universally hailed as the absolute zenith of flamenco guitar history. Growing up in a musically inclined family, he began playing the instrument at the age of five, completely immersed in the local Gitano (Romani) culture of his hometown.
+                    </p>
+                    <p>
+                        Throughout his unparalleled career, he fiercely refused to let flamenco remain static. Alongside his legendary, paradigm-shifting collaborations with the vocal powerhouse Camarón de la Isla, Paco integrated jazz, classical, and Latin American elements into his playing. 
+                    </p>
+                    <p>
+                        His peerless virtuosity, characterized by blistering <span class="italic">picados</span> (fast finger runs) and intense rhythmic control, elevated the Spanish acoustic guitar to the global stage before his passing in 2014.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. THE GEOGRAPHY (INTERACTIVE MAP) -->
+    <section class="w-full relative bg-darker border-y border-gold/10">
+        <div class="grid grid-cols-1 lg:grid-cols-3">
+            <div class="p-12 lg:p-20 flex flex-col justify-center bg-darker/90 z-20 relative">
+                <h3 class="font-sans tracking-[0.2em] text-flamenco text-xs uppercase mb-4">The Origin</h3>
+                <h2 class="font-serif text-3xl md:text-4xl text-sand mb-6">Where Two Waters Meet</h2>
+                <p class="font-light text-sand/70 leading-relaxed mb-6">
+                    The song’s title translates literally to "Between Two Waters." It is a direct geographical homage to Paco de Lucía's hometown of Algeciras. Positioned at the extreme southern tip of Andalusia, it overlooks the Strait of Gibraltar—the exact intersection where the warm currents of the Mediterranean Sea collide with the vast, cold expanse of the Atlantic Ocean.
+                </p>
+                <p class="font-light text-sand/70 leading-relaxed">
+                    Culturally and metaphorically, the title perfectly encapsulates the bridge Paco built between ancient Andalusian purism and the flowing currents of contemporary global music.
+                </p>
+            </div>
+            <div class="lg:col-span-2 h-[500px] lg:h-auto relative z-10" id="map">
+                <!-- Leaflet Map Injected Here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. THE IMPROVISATION & YOUTUBE EMBED -->
+    <section class="py-24 md:py-32 px-6 max-w-7xl mx-auto">
+        <div class="text-center mb-16 gsap-fade">
+            <h2 class="font-serif text-4xl md:text-6xl text-gold mb-6 text-glow-red">The Unplanned Masterpiece</h2>
+            <p class="font-light text-xl text-sand/80 max-w-3xl mx-auto">
+                Perhaps the most extraordinary fact about the song that changed flamenco forever is that it almost didn't exist. It was not a painstakingly composed opus; it was a desperate afterthought.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div class="lg:col-span-8 gsap-fade">
+                <!-- YouTube Embed with Stylized Container -->
+                <div class="relative w-full aspect-video overflow-hidden rounded-lg shadow-[0_0_50px_rgba(155,27,27,0.4)] border border-flamenco/30 group">
+                    <iframe 
+                        src="https://www.youtube.com/embed/LUPifvS0N6s?controls=1&modestbranding=1&rel=0" 
+                        title="Paco de Lucía - Entre dos aguas" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen 
+                        class="absolute inset-0 w-full h-full object-cover z-20">
+                    </iframe>
+                    <!-- Decorative glowing background behind iframe -->
+                    <div class="absolute inset-0 bg-flamenco/20 animate-pulse z-10"></div>
+                </div>
+            </div>
+            <div class="lg:col-span-4 space-y-6 gsap-fade text-sand/80 font-light leading-relaxed">
+                <p>
+                    During the 1973 recording sessions for the album <span class="italic font-medium text-sand">Fuente y caudal</span>, producers realized they were short on required runtime. They needed just one more track to finish the record.
+                </p>
+                <p>
+                    Paco de Lucía, entirely in the moment, improvised the piece directly in the studio. They brought in an electric bass and bongos—instruments considered absolute heresy by flamenco purists of the era.
+                </p>
+                <p>
+                    That spontaneous, lightning-in-a-bottle session birthed a bright, propulsive texture that perfectly supported his masterful acoustic lead. An afterthought became the defining track of his life.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. ANATOMY OF THE SONG (DATA CARDS) -->
+    <section class="py-16 px-6 max-w-7xl mx-auto border-t border-gold/10">
+        <h3 class="font-sans tracking-widest text-center text-flamenco text-sm uppercase mb-12 gsap-fade">Anatomy of a Rumba Flamenca</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Card 1 -->
+            <div class="glass-panel p-10 group hover:border-gold transition-colors duration-500 gsap-fade relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full blur-2xl group-hover:bg-gold/10 transition-colors"></div>
+                <h4 class="font-serif text-2xl text-sand mb-4 group-hover:text-gold transition-colors">The Lead Guitar</h4>
+                <p class="font-light text-sand/70 text-sm leading-relaxed">
+                    A masterclass in improvisational brilliance. The melody is driven by Paco's dazzling, lightning-fast guitar runs and intricate rhythmic strumming that showcase unparalleled fingerstyle virtuosity.
+                </p>
+            </div>
+            <!-- Card 2 -->
+            <div class="glass-panel p-10 group hover:border-flamenco transition-colors duration-500 gsap-fade relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-flamenco/5 rounded-full blur-2xl group-hover:bg-flamenco/20 transition-colors"></div>
+                <h4 class="font-serif text-2xl text-sand mb-4 group-hover:text-flamenco transition-colors">The Electric Bass</h4>
+                <p class="font-light text-sand/70 text-sm leading-relaxed">
+                    Breaking aggressively from strict tradition, a driving, syncopated electric bass line provides a modern, infectious groove that transformed the song from a regional folk tune into a global pop hit.
+                </p>
+            </div>
+            <!-- Card 3 -->
+            <div class="glass-panel p-10 group hover:border-sand transition-colors duration-500 gsap-fade relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-sand/5 rounded-full blur-2xl group-hover:bg-sand/10 transition-colors"></div>
+                <h4 class="font-serif text-2xl text-sand mb-4">The Bongos</h4>
+                <p class="font-light text-sand/70 text-sm leading-relaxed">
+                    Replacing the traditional flamenco handclaps (<span class="italic">palmas</span>), the syncopated bongo percussion injects a distinct Afro-Cuban influence, creating the bright, rhythmic backbone of the rumba.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. THE BLOODLINES (ROOTS) -->
+    <section class="relative w-full py-32 mt-16 roots-bg">
+        <div class="absolute inset-0 bg-darker/80 backdrop-blur-sm"></div>
+        <div class="relative z-10 px-6 max-w-4xl mx-auto text-center gsap-fade">
+            <h3 class="font-sans tracking-widest text-gold text-sm uppercase mb-6">Deep History</h3>
+            <h2 class="font-serif text-4xl md:text-6xl text-sand mb-8">The Bloodlines of Flamenco</h2>
+            <div class="space-y-6 font-light text-lg md:text-xl text-sand/80 leading-relaxed text-left">
+                <p>
+                    To understand the rebellion of <span class="italic">Nuevo Flamenco</span>, one must first feel the immense weight of its origins. Flamenco was born in the sun-drenched, rugged region of Andalusia in southern Spain. It is the breathtaking product of centuries of complex cultural exchange and shared hardship.
+                </p>
+                <p>
+                    The music is a vivid synthesis of the Romani (Gitano) migrants, centuries of Moorish (Arabic) musical theory, native Andalusian folk, and the haunting laments of Sephardic Jewish communities. They coexisted, suffered, and created together, forging an art form defined by deep sorrow, overwhelming passion, and the elusive spiritual state known as <span class="italic text-flamenco font-medium">duende</span>.
+                </p>
+                <p>
+                    For decades, flamenco remained isolated—an insular, private expression of the marginalized. <span class="italic">Entre dos aguas</span> represents the exact pivot point in the 1970s. It reflected a changing Spain, slowly opening its cultural doors as the Franco era waned. Paco de Lucía took the weight of those centuries, infused them with modern rhythm, and made them dance for the entire world.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9. DOWN THE RABBIT HOLE (INTERACTIVE LIST) -->
+    <section class="py-24 px-6 max-w-6xl mx-auto relative z-10">
+        <h2 class="font-serif text-3xl md:text-5xl text-gold mb-12 text-center gsap-fade">Down the Rabbit Hole</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <!-- Track 1 -->
+            <div class="glass-panel p-8 cursor-pointer group hover:bg-flamenco/10 transition-all duration-300 gsap-fade border border-sand/5 hover:border-flamenco/50">
+                <h4 class="font-serif text-xl text-sand group-hover:text-gold transition-colors mb-1">Como el agua</h4>
+                <p class="font-sans text-xs text-sand/50 uppercase tracking-wider mb-4">Camarón de la Isla</p>
+                <p class="font-light text-sm text-sand/70 leading-relaxed group-hover:text-sand transition-colors">
+                    Features Paco de Lucía on guitar and showcases the most legendary, soul-piercing vocal voice in modern flamenco history.
+                </p>
+            </div>
+            <!-- Track 2 -->
+            <div class="glass-panel p-8 cursor-pointer group hover:bg-gold/10 transition-all duration-300 gsap-fade border border-sand/5 hover:border-gold/50">
+                <h4 class="font-serif text-xl text-sand group-hover:text-gold transition-colors mb-1">Mediterranean Sundance</h4>
+                <p class="font-sans text-xs text-sand/50 uppercase tracking-wider mb-4">Al Di Meola & Paco de Lucía</p>
+                <p class="font-light text-sm text-sand/70 leading-relaxed group-hover:text-sand transition-colors">
+                    A legendary acoustic guitar duet that highlights Paco's seamless, groundbreaking fusion of complex flamenco techniques with jazz improvisation.
+                </p>
+            </div>
+            <!-- Track 3 -->
+            <div class="glass-panel p-8 cursor-pointer group hover:bg-flamenco/10 transition-all duration-300 gsap-fade border border-sand/5 hover:border-flamenco/50">
+                <h4 class="font-serif text-xl text-sand group-hover:text-gold transition-colors mb-1">Almoraima</h4>
+                <p class="font-sans text-xs text-sand/50 uppercase tracking-wider mb-4">Paco de Lucía</p>
+                <p class="font-light text-sm text-sand/70 leading-relaxed group-hover:text-sand transition-colors">
+                    An excellent example of his deeper, more complex flamenco compositions that lean heavily into Andalusia's historical Moorish and Arabic influences.
+                </p>
+            </div>
+        </div>
+
+        <!-- 10. SPOTIFY EMBED -->
+        <div class="max-w-3xl mx-auto gsap-fade text-center">
+            <h3 class="font-sans tracking-[0.2em] text-flamenco text-xs uppercase mb-6">Experience the Legacy</h3>
+            <div class="rounded-xl overflow-hidden shadow-2xl shadow-gold/10 border border-gold/20">
+                <iframe style="border-radius:12px" src="https://open.spotify.com/embed/artist/39kZEXhR6X7B92T8QOaWe8?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-12 border-t border-white/5 text-center mt-12 bg-darker">
+        <p class="font-sans text-xs tracking-widest text-sand/40 uppercase">A Curated Sonic Journey • The Heartbeat of Spain</p>
+    </footer>
+
+    <!-- Scripts -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- GSAP & Lenis Smooth Scroll -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+
+    <script>
+        // 1. Initialize Lenis Smooth Scrolling
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // Connect Lenis to GSAP ScrollTrigger
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => { lenis.raf(time * 1000) });
+        gsap.ticker.lagSmoothing(0);
+
+        // 2. Map Initialization (Leaflet)
+        // Center on Algeciras, Spain
+        const map = L.map('map', { 
+            scrollWheelZoom: false,
+            zoomControl: false,
+            dragging: !L.Browser.mobile
+        }).setView([36.1307, -5.4542], 8);
+        
+        // Use CartoDB Dark Matter tiles for a sleek, dark aesthetic matching the theme
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/">CartoDB</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Add Custom Marker for Algeciras
+        const algecirasMarker = L.circleMarker([36.1307, -5.4542], {
+            color: '#9b1b1b',
+            fillColor: '#9b1b1b',
+            fillOpacity: 0.8,
+            radius: 8,
+            weight: 2
+        }).addTo(map);
+
+        algecirasMarker.bindPopup(`
+            <div class="text-center p-2">
+                <div class="font-serif text-lg font-bold text-dark mb-1">Algeciras, Spain</div>
+                <div class="font-sans text-xs text-dark/70 uppercase tracking-wide border-t border-dark/10 pt-1 mt-1">The Birthplace of Paco de Lucía</div>
+            </div>
+        `, { closeButton: false }).openPopup();
+
+        // Add Text Labels for the Two Waters
+        const createLabel = (text) => L.divIcon({
+            className: 'font-serif italic text-sand/60 text-lg whitespace-nowrap drop-shadow-md',
+            html: text,
+            iconSize: [100, 20]
+        });
+
+        L.marker([35.8, -6.5], { icon: createLabel('Atlantic Ocean') }).addTo(map);
+        L.marker([36.1, -4.2], { icon: createLabel('Mediterranean Sea') }).addTo(map);
+
+        // 3. GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Hero Intro Animation Sequence
+        const tl = gsap.timeline();
+        tl.to("#hero-country", { y: 0, opacity: 1, duration: 1, ease: "power3.out", delay: 0.2 })
+          .to("#hero-title", { y: 0, opacity: 1, duration: 1.2, ease: "power3.out" }, "-=0.6")
+          .to("#hero-artist", { y: 0, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.8")
+          .to("#hero-scroll", { opacity: 1, duration: 1, ease: "power2.inOut" }, "-=0.2");
+
+        // Hero Parallax
+        gsap.to("#hero-image", {
+            yPercent: 20,
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".hero-section",
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+
+        // Universal Fade-Up for content blocks
+        gsap.utils.toArray('.gsap-fade').forEach(elem => {
+            gsap.fromTo(elem, 
+                { y: 40, opacity: 0 }, 
+                { 
+                    y: 0, 
+                    opacity: 1, 
+                    duration: 1.2, 
+                    ease: "power3.out", 
+                    scrollTrigger: {
+                        trigger: elem,
+                        start: "top 85%",
+                        toggleActions: "play none none reverse"
+                    }
+                }
+            );
+        });
+
+    </script>
+</body>
+</html>
