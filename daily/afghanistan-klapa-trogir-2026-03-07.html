@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth bg-[#0a0a0a] text-[#c2b2a3]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weary of History | Afghanistan & Dalmatia</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Lora:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+
+    <!-- Tailwind CSS (CDN for standalone file) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'monument': ['Cinzel', 'serif'],
+                        'narrative': ['Lora', 'serif'],
+                        'mono': ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        afghan: {
+                            dust: '#c2b2a3',
+                            night: '#050505',
+                            stone: '#1a1a1a',
+                            lapis: '#24458f',
+                            blood: '#5c1616'
+                        }
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS for elements Tailwind can't easily handle inline -->
+    <style>
+        body { overflow-x: hidden; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Loading Screen */
+        #loader {
+            position: fixed; inset: 0; background: #050505; z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 1s ease-out;
+        }
+
+        /* Image Treatments */
+        .cinematic-img {
+            filter: grayscale(80%) sepia(20%) contrast(120%) brightness(80%);
+            transition: filter 0.5s ease;
+        }
+        .cinematic-img:hover {
+            filter: grayscale(40%) sepia(10%) contrast(110%) brightness(100%);
+        }
+
+        /* Map Marker Animation */
+        .pulse-marker {
+            width: 20px; height: 20px; background: #c2b2a3;
+            border-radius: 50%; box-shadow: 0 0 0 0 rgba(194, 178, 163, 0.7);
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(194, 178, 163, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(194, 178, 163, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(194, 178, 163, 0); }
+        }
+
+        /* Glitch text effect for specific words */
+        .glitch-hover:hover {
+            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            color: #fff;
+        }
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+
+        /* Parallax wrappers */
+        .clip-path-reveal { clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0% 100%); transition: clip-path 1.5s cubic-bezier(0.19, 1, 0.22, 1); }
+        .clip-path-reveal.is-visible { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+    </style>
+</head>
+<body class="antialiased selection:bg-afghan-lapis selection:text-white">
+
+    <!-- Initial Loader -->
+    <div id="loader">
+        <div class="text-center font-mono text-sm tracking-widest text-afghan-dust/50">
+            <span class="block mb-2">CALIBRATING COORDINATES</span>
+            <span class="block animate-pulse">34.5553° N, 69.2075° E</span>
+        </div>
+    </div>
+
+    <!-- HERO SECTION: Full bleed, immersive, jarring -->
+    <header class="relative h-screen w-full overflow-hidden bg-afghan-night">
+        <div class="absolute inset-0 z-0 scale-105 transform hero-bg origin-center">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Kabul_Afghanistan.JPG" 
+                 alt="Kabul" 
+                 class="w-full h-full object-cover cinematic-img opacity-60">
+            <div class="absolute inset-0 bg-gradient-to-b from-afghan-night/30 via-transparent to-afghan-night"></div>
+        </div>
+
+        <div class="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center pt-20">
+            <p class="font-mono text-xs tracking-[0.3em] text-afghan-dust/70 mb-6 uppercase gs-reveal">Camp Lion, Kabul — 2019</p>
+            <h1 class="font-monument text-5xl md:text-7xl lg:text-8xl xl:text-9xl tracking-tight leading-none text-white mix-blend-overlay gs-reveal">
+                POVIŠĆU<br><span class="text-afghan-dust">PRITRUJENA</span>
+            </h1>
+            <p class="mt-8 font-narrative text-xl md:text-2xl text-afghan-dust/90 max-w-2xl gs-reveal italic">
+                "Weary of history."
+            </p>
+        </div>
+
+        <!-- Embedded Audio Player Widget -->
+        <div class="absolute bottom-8 right-8 z-20 gs-reveal">
+            <div class="bg-afghan-stone/80 backdrop-blur-md border border-afghan-dust/20 p-4 rounded-sm flex items-center space-x-4 max-w-xs shadow-2xl">
+                <div class="w-16 h-16 flex-shrink-0 overflow-hidden rounded-sm relative">
+                    <!-- YouTube Embed: Klapa Trogir - Dalmatino -->
+                    <iframe class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] pointer-events-auto" 
+                            src="https://www.youtube.com/embed/S_B7zP26N6g?controls=0&showinfo=0&rel=0" 
+                            title="Klapa Trogir" frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                    </iframe>
+                </div>
+                <div>
+                    <p class="font-mono text-xs text-afghan-dust/50 uppercase">Now Playing</p>
+                    <p class="font-narrative text-sm text-white font-medium leading-tight">Dalmatino, povišću pritrujena</p>
+                    <p class="font-narrative text-xs text-afghan-dust italic mt-1">Klapa Trogir</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gs-reveal">
+            <div class="w-[1px] h-12 bg-gradient-to-b from-afghan-dust to-transparent animate-bounce"></div>
+        </div>
+    </header>
+
+    <main>
+        <!-- PROLOGUE: Split Screen Text Layout -->
+        <section class="py-32 px-6 md:px-12 lg:px-24 bg-afghan-night border-b border-afghan-dust/10">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-center">
+                <div class="order-2 md:order-1 font-narrative text-lg md:text-xl leading-relaxed text-afghan-dust space-y-8">
+                    <p class="gs-fade-up">It is 2019, and the empires are packing their bags, though they do not quite know it yet. At Camp Lion in Kabul, the air tastes of pulverized granite, diesel exhaust, and the metallic tang of impending defeat.</p>
+                    <p class="gs-fade-up">A Croatian soldier, part of the NATO Resolute Support mission, sits on a Hesco barrier looking toward the jagged, snow-capped spine of the Hindu Kush. To drown out the hum of American Black Hawks and the distant, rhythmic thud of artillery, he pulls out his phone and plays a song from home.</p>
+                    <p class="gs-fade-up">It is an <em class="text-white">a cappella</em> track. A group of men, standing shoulder to shoulder in a stone courtyard thousands of miles away, inhale in unison. And then, they sing.</p>
+                </div>
+                <div class="order-1 md:order-2 flex justify-center gs-fade-left">
+                    <div class="w-full aspect-[3/4] overflow-hidden relative border border-afghan-dust/20 p-2">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/ea/Mountains_of_Kabul.jpg" 
+                             alt="Kabul Mountains" 
+                             loading="lazy"
+                             class="w-full h-full object-cover cinematic-img parallax-img">
+                        <div class="absolute inset-0 border border-afghan-dust/10 m-4 pointer-events-none"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 1: The Anatomy of Exhaustion (Magazine Spread Style) -->
+        <section class="py-32 bg-[#0d0d0d] relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-1/2 h-full bg-afghan-stone/30 transform skew-x-12 translate-x-32 hidden lg:block pointer-events-none"></div>
+            
+            <div class="max-w-6xl mx-auto px-6 relative z-10">
+                <h2 class="font-monument text-3xl md:text-5xl text-white mb-20 text-center tracking-wide gs-fade-up">
+                    <span class="block text-afghan-lapis/80 text-sm font-mono tracking-[0.2em] mb-4">Part I</span>
+                    The Anatomy of Exhaustion
+                </h2>
+
+                <!-- Lyric Block 1 -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-24 items-center gs-fade-up">
+                    <div class="lg:col-span-5 text-right lg:pr-12 border-b lg:border-b-0 lg:border-r border-afghan-dust/20 pb-8 lg:pb-0">
+                        <blockquote class="font-monument text-2xl lg:text-3xl text-white/80 leading-snug">
+                            "Pute, laze pizon dubli tovari..."
+                        </blockquote>
+                        <p class="font-mono text-xs text-afghan-dust mt-4 uppercase tracking-wider">(Paths and field entrances worn deep by burdened donkeys.)</p>
+                    </div>
+                    <div class="lg:col-span-7 font-narrative text-lg leading-relaxed text-afghan-dust/90">
+                        <p>In the high altitudes of the Hindu Kush, the donkey remains the undisputed king of logistics. Pick your way up the Salang Pass, or navigate the treacherous, narrow defiles of the Wakhan Corridor, and you will see them. Their hooves wear deep grooves into the ancient rock, just as they did when Alexander the Great marched his armies through these exact same valleys in 330 BC.</p>
+                    </div>
+                </div>
+
+                <!-- Lyric Block 2 -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-24 items-center gs-fade-up">
+                    <div class="lg:col-span-7 font-narrative text-lg leading-relaxed text-afghan-dust/90 order-2 lg:order-1">
+                        <p>Afghanistan is a country defined by its thirst. The rivers that rush down from the Pamir knot are cold and violent, but the plains are parched. For thousands of years, the Afghan people have survived using <em class="text-white">karez</em>—subterranean aqueducts dug by hand deep into the arid earth. They are the lifelines of the desert, fiercely protected and deeply revered.</p>
+                    </div>
+                    <div class="lg:col-span-5 text-left lg:pl-12 border-t lg:border-t-0 lg:border-l border-afghan-dust/20 pt-8 lg:pt-0 order-1 lg:order-2">
+                        <blockquote class="font-monument text-2xl lg:text-3xl text-white/80 leading-snug">
+                            "Gustirne žedne mijun sići i lati..."
+                        </blockquote>
+                        <p class="font-mono text-xs text-afghan-dust mt-4 uppercase tracking-wider">(Thirsty wells, a million buckets and pails.)</p>
+                    </div>
+                </div>
+
+                <!-- Image Break -->
+                <div class="w-full h-[60vh] my-32 overflow-hidden relative gs-fade-up clip-path-reveal">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Mountains_of_Afghanistan.jpg" 
+                         alt="Mountains of Afghanistan" 
+                         loading="lazy"
+                         class="w-full h-[120%] object-cover object-center cinematic-img parallax-img-fast -mt-10">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <p class="font-monument text-white/90 text-xl md:text-3xl text-center max-w-2xl px-6 leading-relaxed">
+                            "The bent backs of farmers from the hoe... <br><span class="text-afghan-blood mt-2 block">A rebel lineage grown on thorns."</span>
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 2: Scrollytelling Map (The Graveyard and the Karst) -->
+        <section class="relative bg-afghan-night h-[200vh]" id="map-section">
+            <!-- Sticky Map Container -->
+            <div class="sticky top-0 h-screen w-full z-0 pointer-events-none">
+                <div id="leafletMap" class="w-full h-full filter sepia-[.3] hue-rotate-[180deg] brightness-[0.7] contrast-[1.2]"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-afghan-night via-afghan-night/80 to-transparent z-[1000] pointer-events-none"></div>
+            </div>
+
+            <!-- Scrolling Content Overlay -->
+            <div class="absolute top-0 left-0 w-full h-full z-10 pointer-events-none">
+                <div class="max-w-7xl mx-auto px-6 h-full flex flex-col justify-between py-[20vh]">
+                    
+                    <div class="w-full md:w-1/2 lg:w-5/12 pointer-events-auto bg-afghan-night/90 backdrop-blur-md p-8 md:p-12 border border-afghan-dust/10 mb-[40vh] gs-map-card shadow-2xl">
+                        <h3 class="font-monument text-2xl text-white mb-6">The Graveyard & The Karst</h3>
+                        <div class="font-narrative text-afghan-dust space-y-4">
+                            <p>The juxtaposition of Dalmatia and Afghanistan might seem absurd on a map. One is a Mediterranean paradise; the other, a landlocked, war-torn expanse of Central Asia.</p>
+                            <p>But in their bones, they share the exact same historical exhaustion. Both regions are defined by unforgiving topographies that empires covet but cannot tame.</p>
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-1/2 lg:w-5/12 md:ml-auto pointer-events-auto bg-afghan-night/90 backdrop-blur-md p-8 md:p-12 border border-afghan-dust/10 gs-map-card shadow-2xl">
+                        <h3 class="font-monument text-2xl text-white mb-6 glitch-hover">The Balkans of Asia</h3>
+                        <div class="font-narrative text-afghan-dust space-y-4">
+                            <p>Dalmatia has the Dinaric Alps, a wall of limestone. Afghanistan has the Hindu Kush, a tectonic collision zone that spikes 25,000 feet into the troposphere.</p>
+                            <p>Afghanistan is not just a country; it is a verb. It is something that happens to empires. And yet, the people who actually live there are the ones left to sweep up the ashes. Crushed by the weight of their own history.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: The Smog and the Stone (Slow-scroll narrative) -->
+        <section class="relative bg-[#050505] py-32 overflow-hidden">
+            <!-- Background Texture -->
+            <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+
+            <div class="max-w-4xl mx-auto px-6 relative z-10 text-center">
+                <h2 class="font-monument text-4xl text-white mb-16 gs-fade-up">The Smog and the Stone</h2>
+                
+                <div class="font-narrative text-xl md:text-2xl text-afghan-dust/80 space-y-12 leading-loose">
+                    <p class="gs-blur-reveal">If the Hindu Kush is the fortress, Kabul is its chaotic, beating heart. A city that has been destroyed and rebuilt so many times it has lost count.</p>
+                    <p class="gs-blur-reveal text-white">It smells of burning coal, cheap diesel, incinerated plastic, and the rich, savory smoke of lamb fat sizzling over street-side braziers. <br><span class="italic text-afghan-dust">It smells of survival.</span></p>
+                </div>
+            </div>
+
+            <!-- Full Bleed Image Transition -->
+            <div class="w-full h-screen mt-32 relative gs-fade-up">
+                <div class="absolute inset-0 bg-afghan-night/40 z-10 mix-blend-multiply"></div>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/23/Aerial_view_of_Hindu_Kush_Range_in_Afghanistan.jpg" 
+                     alt="Aerial Hindu Kush" 
+                     loading="lazy"
+                     class="w-full h-full object-cover cinematic-img">
+                
+                <!-- Floating Text Box over Image -->
+                <div class="absolute inset-0 z-20 flex items-center justify-center p-6">
+                    <div class="bg-black/60 backdrop-blur-lg border border-white/10 p-8 md:p-16 max-w-3xl text-center gs-fade-up">
+                        <p class="font-narrative text-lg md:text-xl text-white leading-relaxed">
+                            "Izlizana Bašćanska tavuleta / 'rvackeg ditinjevanja..."<br>
+                            <span class="text-sm font-mono text-afghan-dust mt-4 block">(The faded Baška tablet / relics of Croatian childhood)</span>
+                        </p>
+                        <div class="w-12 h-[1px] bg-afghan-dust/50 mx-auto my-8"></div>
+                        <p class="font-narrative text-base md:text-lg text-afghan-dust/90">
+                            How many times has Afghanistan had its identity overwritten? The Greco-Bactrian Buddhas blown to dust. The British Durand Line. The Soviet brutalist blocks. The American biometric databases. Yet, the Afghan clings to the poetry that has sustained them through the dark ages.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Outro - Straight As Columns -->
+        <section class="py-40 bg-black relative flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-32 bg-gradient-to-b from-afghan-dust/50 to-transparent"></div>
+            
+            <div class="max-w-3xl gs-fade-up">
+                <p class="font-mono text-sm tracking-widest text-afghan-dust/50 mb-8 uppercase">July 2019</p>
+                <p class="font-narrative text-xl text-afghan-dust leading-relaxed mb-16">
+                    A suicide bomber slammed into a Croatian military convoy on the outskirts of Kabul. A 27-year-old soldier named Josip Briški was killed. The dust of the Balkans and the dust of Central Asia mixed in the most tragic, literal way.
+                </p>
+                
+                <p class="font-narrative text-xl text-afghan-dust leading-relaxed mb-24">
+                    The empires always leave. They look at their watches. The Afghans look at the mountains. They know that time is measured not in deployments, but in geology.
+                </p>
+
+                <h2 class="font-monument text-5xl md:text-7xl lg:text-8xl text-white tracking-tighter leading-none mb-6">
+                    A JUDI DRITI<br><span class="text-afghan-dust">KA KOLONE.</span>
+                </h2>
+                <p class="font-mono text-sm tracking-[0.2em] text-white/50 uppercase">And the men, straight as columns.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER: Stats for Nerds -->
+    <footer class="bg-[#050505] border-t border-afghan-dust/10 text-afghan-dust/60 py-12 px-6 font-mono text-xs leading-relaxed">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div>
+                <h4 class="text-white mb-3 tracking-widest uppercase text-[10px] border-b border-afghan-dust/20 pb-2">System Specs</h4>
+                <ul class="space-y-1">
+                    <li><span class="text-afghan-dust/40">Model:</span> Claude 3.5 Sonnet</li>
+                    <li><span class="text-afghan-dust/40">Architecture:</span> Transformer LLM</li>
+                    <li><span class="text-afghan-dust/40">Context:</span> ~200k tokens</li>
+                    <li><span class="text-afghan-dust/40">Cutoff:</span> April 2024</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h4 class="text-white mb-3 tracking-widest uppercase text-[10px] border-b border-afghan-dust/20 pb-2">Generation Mechanics</h4>
+                <p class="mb-2"><span class="text-afghan-dust/40">Temp:</span> ~0.7 (Balances structural discipline required for valid HTML with the poetic/creative leaps needed for art direction).</p>
+                <p><span class="text-afghan-dust/40">Process:</span> Calculating the most statistically probable sequence of sub-word pieces (tokens) based on multi-dimensional contextual relationships established during training.</p>
+            </div>
+
+            <div>
+                <h4 class="text-white mb-3 tracking-widest uppercase text-[10px] border-b border-afghan-dust/20 pb-2">Model Reflection</h4>
+                <p class="mb-2"><span class="text-white">Confident in:</span> Translating the emotional weight of the text into a dark, monolithic, and austere visual rhythm (typography, spacing, color palette).</p>
+                <p><span class="text-afghan-blood">Uncertain of:</span> The longevity of the specific YouTube iframe embed ID, as external links decay.</p>
+            </div>
+
+            <div>
+                <h4 class="text-white mb-3 tracking-widest uppercase text-[10px] border-b border-afghan-dust/20 pb-2">Hallucination & Reality</h4>
+                <p class="mb-2"><span class="text-afghan-dust/40">Risk:</span> The exact sensory details of Camp Lion in July 2019 (smell of pulverized granite, specific helicopter flight paths) are synthesized atmospheric tropes, not verified meteorological/logistical logs of that exact date.</p>
+                <p><span class="text-white">Did you know?</span> Attention mechanisms don't read left-to-right; they compute mathematical relationships between all words in the context window simultaneously.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <!-- GSAP Core & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        // 1. Loader Logic
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                initAnimations(); // Start animations after load
+            }, 1000);
+            
+            initMap(); // Init map regardless
+        });
+
+        // 2. Leaflet Map Initialization
+        function initMap() {
+            // Coordinates from dossier: 34.5553° N, 69.2075° E
+            const lat = 34.5553;
+            const lng = 69.2075;
+            
+            // Disable interactions for scrollytelling background feel
+            const map = L.map('leafletMap', {
+                center: [lat, lng],
+                zoom: 12,
+                zoomControl: false,
+                dragging: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                boxZoom: false,
+                keyboard: false
+            });
+
+            // Dark map tiles (CartoDB Dark Matter)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            // Custom HTML marker for the pulse effect
+            const pulseIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: "<div class='pulse-marker'></div>",
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            L.marker([lat, lng], {icon: pulseIcon}).addTo(map);
+        }
+
+        // 3. GSAP Animations
+        function initAnimations() {
+            gsap.registerPlugin(ScrollTrigger);
+
+            // Hero entrance
+            gsap.fromTo(".gs-reveal", 
+                { y: 30, opacity: 0 }, 
+                { y: 0, opacity: 1, duration: 1.5, stagger: 0.2, ease: "power3.out" }
+            );
+
+            // Standard Fade Up elements
+            gsap.utils.toArray('.gs-fade-up').forEach(elem => {
+                gsap.fromTo(elem, 
+                    { y: 50, opacity: 0 },
+                    { 
+                        scrollTrigger: {
+                            trigger: elem,
+                            start: "top 85%",
+                        },
+                        y: 0, opacity: 1, duration: 1, ease: "power2.out"
+                    }
+                );
+            });
+
+            // Fade Left (for split screen image)
+            gsap.fromTo('.gs-fade-left',
+                { x: 50, opacity: 0 },
+                {
+                    scrollTrigger: { trigger: '.gs-fade-left', start: "top 80%" },
+                    x: 0, opacity: 1, duration: 1.2, ease: "power2.out"
+                }
+            );
+
+            // Parallax Images Slow
+            gsap.utils.toArray('.parallax-img').forEach(img => {
+                gsap.to(img, {
+                    yPercent: 15,
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: img.parentElement,
+                        start: "top bottom",
+                        end: "bottom top",
+                        scrub: true
+                    } 
+                });
+            });
+
+            // Parallax Images Fast
+            gsap.utils.toArray('.parallax-img-fast').forEach(img => {
+                gsap.to(img, {
+                    yPercent: 30,
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: img.parentElement,
+                        start: "top bottom",
+                        end: "bottom top",
+                        scrub: true
+                    } 
+                });
+            });
+
+            // Clip-path reveal for the wide mountain shot
+            gsap.utils.toArray('.clip-path-reveal').forEach(elem => {
+                ScrollTrigger.create({
+                    trigger: elem,
+                    start: "top 75%",
+                    onEnter: () => elem.classList.add('is-visible')
+                });
+            });
+
+            // Map Cards floating up over the sticky map
+            gsap.utils.toArray('.gs-map-card').forEach(card => {
+                gsap.fromTo(card,
+                    { y: 100, opacity: 0 },
+                    {
+                        scrollTrigger: { trigger: card, start: "top 90%", end: "top 40%", scrub: 1 },
+                        y: 0, opacity: 1
+                    }
+                );
+            });
+
+            // Blur text reveal in Smog section
+            gsap.utils.toArray('.gs-blur-reveal').forEach(text => {
+                gsap.fromTo(text,
+                    { filter: "blur(10px)", opacity: 0, y: 20 },
+                    {
+                        scrollTrigger: { trigger: text, start: "top 80%" },
+                        filter: "blur(0px)", opacity: 1, y: 0, duration: 1.5, ease: "power2.out"
+                    }
+                );
+            });
+
+            // Refresh ScrollTrigger calculations after all images are definitely loaded
+            setTimeout(() => { ScrollTrigger.refresh(); }, 500);
+        }
+    </script>
+</body>
+</html>
