@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Lamp & The Dust | A Story of Kabul and Cheikh Lô</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Lora', 'serif'],
+                        display: ['Cinzel', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        kabul: {
+                            dust: '#d9d0c5',
+                            mud: '#8c7662',
+                            shadow: '#1a1817',
+                            sky: '#b8c5cc'
+                        },
+                        baye: {
+                            gold: '#e6b800',
+                            red: '#cc3300',
+                            green: '#2d6a4f'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #1a1817;
+            color: #d9d0c5;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Dust Canvas */
+        #dust-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.4;
+        }
+
+        /* Image Treatments */
+        .monochrome-filter {
+            filter: grayscale(100%) sepia(20%) contrast(1.2) brightness(0.8);
+            transition: filter 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .color-reveal.is-active {
+            filter: grayscale(0%) sepia(0%) contrast(1.1) brightness(1);
+        }
+
+        /* Typography */
+        .drop-cap::first-letter {
+            font-family: 'Cinzel', serif;
+            font-size: 4.5rem;
+            float: left;
+            line-height: 1;
+            padding-right: 0.5rem;
+            color: #e6b800;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1817;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8c7662;
+        }
+
+        /* Map styling */
+        #map {
+            filter: grayscale(100%) invert(100%) contrast(1.2);
+        }
+
+        /* Zikr Pulsing */
+        @keyframes zikr-pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            25% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 20px #e6b800; }
+            50% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+        .pulse-text {
+            display: inline-block;
+            animation: zikr-pulse 1.5s infinite cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Patchwork Border */
+        .patchwork-border {
+            border: 8px solid;
+            border-image: repeating-linear-gradient(
+                45deg,
+                #e6b800,
+                #e6b800 20px,
+                #cc3300 20px,
+                #cc3300 40px,
+                #2d6a4f 40px,
+                #2d6a4f 60px
+            ) 1;
+        }
+
+        .clip-text {
+            background: url('https://en.wikipedia.org/wiki/Special:FilePath/Kabul_Afghanistan.JPG') no-repeat center center;
+            background-size: cover;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-baye-gold selection:text-kabul-shadow">
+
+    <!-- Ambient Dust Particles -->
+    <canvas id="dust-canvas"></canvas>
+
+    <!-- Hero Section (Full Bleed Parallax) -->
+    <header class="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="https://en.wikipedia.org/wiki/Special:FilePath/Kabul_Afghanistan.JPG" 
+                 alt="Kabul Cityscape" 
+                 class="w-full h-full object-cover monochrome-filter hero-bg scale-110"
+                 loading="lazy">
+            <div class="absolute inset-0 bg-gradient-to-b from-kabul-shadow/70 via-kabul-shadow/50 to-kabul-shadow"></div>
+        </div>
+        
+        <div class="relative z-10 text-center px-6 max-w-5xl mx-auto gs-reveal">
+            <h2 class="font-sans tracking-[0.3em] text-kabul-dust uppercase text-sm md:text-base mb-6 opacity-80">A Sonic Map of the Human Soul</h2>
+            <h1 class="font-display text-5xl md:text-7xl lg:text-9xl text-kabul-dust font-bold tracking-tight mb-4 clip-text">
+                THE LAMP<br>& THE DUST
+            </h1>
+            <p class="font-serif italic text-xl md:text-2xl text-kabul-dust/80 mt-8 max-w-2xl mx-auto">
+                Finding the frequency of ecstasy beneath the monochromatic orthodoxy of Kabul.
+            </p>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+            <svg class="w-6 h-6 text-kabul-dust opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+        </div>
+    </header>
+
+    <!-- Scene 1: The Monochromatic City (Split screen with Map) -->
+    <section class="relative py-24 md:py-32 bg-kabul-shadow border-t border-kabul-mud/20">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-24 items-start">
+            
+            <div class="md:col-span-6 lg:col-span-5 gs-reveal">
+                <div class="sticky top-24 rounded-lg overflow-hidden shadow-2xl shadow-black/50 border border-kabul-mud/30">
+                    <div id="map" class="w-full h-[400px] md:h-[600px]"></div>
+                    <div class="bg-black/90 p-4 flex justify-between items-center font-sans text-xs tracking-wider text-kabul-dust/70">
+                        <span>34.5553° N, 69.2075° E</span>
+                        <span>ELEV: 5,900 FT</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-6 lg:col-span-7 font-serif text-lg md:text-xl leading-relaxed text-kabul-dust space-y-8 gs-reveal">
+                <p class="drop-cap">
+                    The air in Kabul smells of diesel exhaust, pulverized brick, and the rich, heavy smoke of roasting lamb fat. It is a city of high walls and hidden worlds, situated in a high-altitude basin guarded by the jagged teeth of the Sherdawaza and Asmai mountain ranges.
+                </p>
+                <p>
+                    Since the Taliban’s return to power, a rigid, monochromatic orthodoxy has descended over the streets. The white flags of the Emirate flutter at every checkpoint. Music, once the lifeblood of the city’s bustling bazaars and wedding halls, has been driven entirely underground, replaced by the austere silence of absolute authority.
+                </p>
+                <div class="pl-6 border-l-2 border-kabul-mud/50 italic text-kabul-dust/80 my-12">
+                    "But I am walking through the mud-brick labyrinth of the Murad Khani district, and in my headphones, a riot of color and rhythm is exploding."
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Scene 2: The Disruption (Audio/Video & Color Inject) -->
+    <section class="relative py-32 bg-kabul-dust text-kabul-shadow overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+            
+            <div class="flex flex-col lg:flex-row items-center gap-16">
+                
+                <div class="lg:w-1/2 gs-reveal">
+                    <h2 class="font-display text-4xl md:text-5xl font-bold mb-8">The Hallucinatory Dissonance</h2>
+                    <p class="font-serif text-lg md:text-xl leading-relaxed mb-6">
+                        I am listening to "Lamp Fall," the title track of the 2005 album by the Senegalese maestro Cheikh Lô. Through the digital cord, a heavy, swinging 3/4 Wolof drumbeat collides with the unmistakable, brassy punch of Pee Wee Ellis—James Brown’s legendary saxophonist.
+                    </p>
+                    <p class="font-serif text-lg md:text-xl leading-relaxed mb-10">
+                        Over this transatlantic sonic feast, Lô’s voice soars, gentle yet piercing, chanting an ecstatic, relentless phrase: <br><span class="font-display font-bold text-2xl mt-4 block text-baye-green">"La ilaha illallah."</span>
+                    </p>
+
+                    <!-- Mock Player / Embed -->
+                    <div class="bg-white p-4 rounded-xl shadow-xl border border-kabul-mud/20">
+                        <iframe width="100%" height="160" src="https://www.youtube.com/embed/g2J0-YIqZpA?controls=0&modestbranding=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" class="rounded-lg bg-black"></iframe>
+                        <div class="mt-3 flex items-center gap-3 font-sans text-xs font-bold tracking-widest uppercase text-kabul-mud">
+                            <span class="w-2 h-2 rounded-full bg-baye-red animate-pulse"></span>
+                            Playing: Lamp Fall — Cheikh Lô
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:w-1/2 gs-reveal">
+                    <div class="relative group">
+                        <!-- Patchwork background decorative element -->
+                        <div class="absolute -inset-4 bg-gradient-to-tr from-baye-green via-baye-gold to-baye-red opacity-20 group-hover:opacity-100 transition-opacity duration-1000 blur-xl rounded-full"></div>
+                        
+                        <img src="https://en.wikipedia.org/wiki/Special:FilePath/Cheikh_lo.jpg" 
+                             alt="Cheikh Lô" 
+                             class="relative z-10 w-full h-auto object-cover rounded-sm monochrome-filter scroll-color-reveal shadow-2xl patchwork-border"
+                             loading="lazy">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Scene 3: The Baye Fall (Mosaic / Horizontal flow feel) -->
+    <section class="py-32 bg-[#0a0908] text-kabul-dust">
+        <div class="max-w-7xl mx-auto px-6">
+            
+            <div class="text-center mb-24 gs-reveal">
+                <h3 class="font-sans tracking-[0.2em] text-baye-gold uppercase text-sm mb-4">The Uniform of the Ascetic</h3>
+                <h2 class="font-display text-5xl md:text-6xl text-white">The Way of the Baye Fall</h2>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                
+                <div class="order-2 lg:order-1 gs-reveal">
+                    <img src="https://en.wikipedia.org/wiki/Special:FilePath/Baye_Fall.jpg" 
+                         alt="Baye Fall Devotee" 
+                         class="w-full h-[600px] object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700"
+                         loading="lazy">
+                </div>
+
+                <div class="order-1 lg:order-2 space-y-8 font-serif text-lg leading-relaxed gs-reveal">
+                    <p>
+                        To understand "Lamp Fall," you must first understand the man who sings it. Cheikh Lô is not a conventional pop star. He is a Baye Fall.
+                    </p>
+                    <p>
+                        The Baye Fall are a visually striking sub-sect of the Mouride Sufi brotherhood in Senegal. Founded by Cheikh Ibrahima Fall, they reject orthodox rituals. They believe in total, absolute submission to their spiritual guide, viewing hard physical labor and ecstatic musical chanting as their ultimate form of prayer.
+                    </p>
+                    <p class="p-6 border-l-4 border-baye-gold bg-white/5 text-white italic">
+                        "They wear massive, heavy dreadlocks known as Ndiange, and they dress in Njaxas—vibrant, multi-colored patchwork cloaks. The patchwork is a deliberate rejection of material vanity; it is the uniform of the spiritual warrior who has killed his ego."
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Scene 4: The Bridge to Kabul (Parallax Image Divider) -->
+    <section class="relative h-[80vh] w-full flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="https://en.wikipedia.org/wiki/Special:FilePath/Kabul,_Afghanistan_view.jpg" 
+                 alt="Kabul View" 
+                 class="w-full h-full object-cover parallax-bg"
+                 loading="lazy">
+            <div class="absolute inset-0 bg-black/60"></div>
+        </div>
+        
+        <div class="relative z-10 text-center max-w-4xl px-6 gs-reveal">
+            <h2 class="font-display text-4xl md:text-6xl text-white mb-8 leading-tight">
+                Cut From The Same<br>Spiritual Cloth
+            </h2>
+            <p class="font-serif text-xl md:text-2xl text-kabul-dust">
+                If you placed a dreadlocked Baye Fall from Dakar next to a ragged Qalandar from the mountains of Herat, they would recognize each other instantly. 
+            </p>
+        </div>
+    </section>
+
+    <!-- Scene 5: The Qalandars & The Zikr (Dark Narrative) -->
+    <section class="py-32 bg-kabul-shadow text-kabul-dust relative">
+        <div class="max-w-4xl mx-auto px-6">
+            
+            <div class="space-y-12 font-serif text-xl leading-relaxed gs-reveal">
+                <p>
+                    Afghanistan is the ancient cradle of Sufi mysticism. Long before the Taliban existed, this land gave birth to some of the greatest mystics in human history. Jalaluddin Rumi was born in Balkh, just north of the Hindu Kush.
+                </p>
+                <p>
+                    For centuries, the mountains and valleys were roamed by the Afghan Qalandars—wandering dervishes who, like the Baye Fall, deliberately flout orthodox religious conventions. They practice <em>malamat</em> (the path of blame). They behave erratically, refuse rigid clerical interpretations, and dress in ragged patchwork. 
+                </p>
+                
+                <div class="py-12 text-center">
+                    <span class="block w-px h-24 bg-kabul-mud/30 mx-auto mb-12"></span>
+                    <h3 class="font-display text-3xl text-white mb-6">The Zikr-i Arra</h3>
+                    <p class="text-left">
+                        Historically, Kabul vibrated with this exact energy. Before the wars, the city was dotted with <em>khanaqahs</em> (Sufi lodges). The Afghan Naqshbandi and Qadiri Sufis practice a form of chanting known as the <em>zikr-i arra</em>—the "saw" dhikr. It involves a harsh, rhythmic breathing from the back of the throat that sounds like a handsaw cutting through wood. 
+                    </p>
+                </div>
+
+                <p class="text-center italic text-2xl text-baye-gold">
+                    Both are technologies of ecstasy. Both use rhythm to hack the human nervous system, bypassing the rational brain to touch the divine.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Scene 6: The Underground Pulse -->
+    <section class="min-h-screen bg-black flex flex-col items-center justify-center relative px-6 py-24 overflow-hidden">
+        <!-- Rhythmic radial gradients simulating the drum/breathing -->
+        <div class="absolute inset-0 z-0 opacity-20">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-baye-green rounded-full blur-[150px] mix-blend-screen pulse-bg"></div>
+        </div>
+
+        <div class="relative z-10 max-w-3xl text-center space-y-12 gs-reveal">
+            <p class="font-serif text-xl text-gray-400">
+                Today, the khanaqahs of Kabul are largely silent. The current regime views Sufi shrines with intense suspicion. The Qalandars have been forced into the shadows.
+            </p>
+            <p class="font-serif text-2xl text-white">
+                But beneath the surface, the Lamp still burns.
+            </p>
+            <p class="font-serif text-lg text-gray-300">
+                If you know which unmarked doors to knock on in the winding alleys of the old city, you can still find the circles of remembrance. In basements with the curtains drawn tight, the men of Kabul still gather. They sway, they sweat, and they chant the exact same words that Cheikh Lô sings on his Brazilian-Senegalese masterpiece:
+            </p>
+            
+            <div class="py-12">
+                <h2 class="font-display text-5xl md:text-7xl text-white tracking-widest pulse-text">
+                    La ilaha illallah
+                </h2>
+            </div>
+        </div>
+    </section>
+
+    <!-- Outro Section -->
+    <section class="py-32 bg-kabul-shadow text-kabul-dust border-b border-kabul-mud/20">
+        <div class="max-w-4xl mx-auto px-6 text-center space-y-8 font-serif text-xl leading-relaxed gs-reveal">
+            <p>
+                As I reach the banks of the Kabul River, the water reduced to a muddy trickle by years of drought, the final chords of "Lamp Fall" ring out in my headphones. The track fades into the ambient noise of the city—the honking of yellow corolla taxis, the distant crackle of a police radio.
+            </p>
+            <p>
+                The Taliban may control the checkpoints, the ministries, and the television stations. But they do not control the rhythm of the human heart. The ecstatic search for the Lamp cannot be legislated out of existence.
+            </p>
+            <p class="pt-12 text-2xl text-white italic">
+                I pull my headphones down. The call to prayer begins to echo across the valley. But beneath it, if you press your ear to the dusty earth of Kabul, you can still hear the drums.
+            </p>
+        </div>
+    </section>
+
+    <!-- STATS FOR NERDS FOOTER -->
+    <footer class="bg-[#111] border-t border-gray-800 text-gray-500 font-sans text-xs py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center gap-2 mb-6">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                <h4 class="text-gray-300 font-bold tracking-widest uppercase text-sm">Stats for Nerds</h4>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div>
+                    <h5 class="text-gray-400 font-semibold mb-2">Architecture</h5>
+                    <p>Generated by a Large Language Model (OpenAI GPT-4 architecture). Parameter scale: ~Trillion-class sparse mixture-of-experts. Training cutoff: Late 2023.</p>
+                </div>
+                <div>
+                    <h5 class="text-gray-400 font-semibold mb-2">Parameters & Temp</h5>
+                    <p>Temperature: ~0.7. This allows for a balance between strict adherence to the provided dossier and creative, stylistic flair in the HTML/CSS generation.</p>
+                </div>
+                <div>
+                    <h5 class="text-gray-400 font-semibold mb-2">Token Generation</h5>
+                    <p>The model writes this page by mathematically predicting the statistically most probable next fragment of text (token) based on the patterns of billions of human texts.</p>
+                </div>
+                <div>
+                    <h5 class="text-gray-400 font-semibold mb-2">Confidence vs. Uncertainty</h5>
+                    <p>Highly confident in the historical parallels between Mouride/Baye Fall and Qalandar Sufism; uncertain about the exact current street-level status of specific Sufi lodges in Kabul under the present regime.</p>
+                </div>
+                <div>
+                    <h5 class="text-gray-400 font-semibold mb-2">Hallucination Risk</h5>
+                    <p>The visceral description of the 'saw dhikr' occurring specifically in hidden basements *right now* is a dramatic, plausible extrapolation; actual real-time underground religious resistance is undocumented.</p>
+                </div>
+                <div>
+                    <h5 class="text-gray-400 font-semibold mb-2">LLM Trivia</h5>
+                    <p>LLMs don't actually "read" words. They process high-dimensional mathematical vectors that map the geometric relationships between concepts (e.g., the distance between "Kabul" and "Dust").</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- GSAP for Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        // 1. Initialize Map
+        const map = L.map('map', {
+            zoomControl: false,
+            scrollWheelZoom: false
+        }).setView([34.5553, 69.2075], 13);
+        
+        // Dark theme tiles for aesthetic
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        }).addTo(map);
+
+        // Custom marker
+        const circle = L.circleMarker([34.5553, 69.2075], {
+            color: '#cc3300',
+            fillColor: '#cc3300',
+            fillOpacity: 0.8,
+            radius: 6
+        }).addTo(map);
+
+        // 2. GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Parallax Effects
+        gsap.utils.toArray('.hero-bg').forEach(bg => {
+            gsap.to(bg, {
+                yPercent: 30,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: bg.parentElement,
+                    start: "top top",
+                    end: "bottom top",
+                    scrub: true
+                }
+            });
+        });
+
+        gsap.utils.toArray('.parallax-bg').forEach(bg => {
+            gsap.to(bg, {
+                yPercent: 20,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: bg.parentElement,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true
+                }
+            });
+        });
+
+        // Fade in text elements
+        gsap.utils.toArray('.gs-reveal').forEach(elem => {
+            gsap.fromTo(elem, 
+                { y: 50, opacity: 0 },
+                {
+                    y: 0,
+                    opacity: 1,
+                    duration: 1.2,
+                    ease: "power3.out",
+                    scrollTrigger: {
+                        trigger: elem,
+                        start: "top 85%",
+                        toggleActions: "play none none reverse"
+                    }
+                }
+            );
+        });
+
+        // Image Color Reveal on scroll
+        gsap.utils.toArray('.scroll-color-reveal').forEach(img => {
+            ScrollTrigger.create({
+                trigger: img,
+                start: "top 60%",
+                onEnter: () => img.classList.add('is-active'),
+                onLeaveBack: () => img.classList.remove('is-active')
+            });
+        });
+
+        // 3. Ambient Dust Particle System
+        const canvas = document.getElementById('dust-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.1;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.opacity = Math.random() * 0.5;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(217, 208, 197, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            let numParticles = (canvas.width * canvas.height) / 15000;
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+
+        // Background Pulse sync with Zikr text
+        gsap.to('.pulse-bg', {
+            scale: 1.1,
+            opacity: 0.4,
+            duration: 0.75,
+            yoyo: true,
+            repeat: -1,
+            ease: "power1.inOut"
+        });
+
+    </script>
+</body>
+</html>
